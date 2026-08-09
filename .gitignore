@@ -4,6 +4,7 @@ node_modules/
 .env.*.local
 dist/
 build/
+*.tsbuildinfo
 .expo/
 .next/
 npm-debug.log*
