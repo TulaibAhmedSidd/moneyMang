@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "MoneyManage",
-    "slug": "money-manage",
+    "slug": "tulaib",
     "scheme": "moneyapp",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -29,7 +29,12 @@
       "expo-secure-store"
     ],
     "extra": {
-      "apiUrl": "https://money-manage-web-wheat.vercel.app"
-    }
+      "apiUrl": "https://money-manage-web-wheat.vercel.app",
+      "router": {},
+      "eas": {
+        "projectId": "1f90c207-a6bb-4e8e-83e1-f441c59ce7b3"
+      }
+    },
+    "owner": "ahsids-team"
   }
 }
