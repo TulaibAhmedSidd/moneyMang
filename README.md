@@ -31,11 +31,6 @@ A Global Personal Finance and Expense Tracking Platform. Built as a secure, high
    ```
 3. Set up the environment file. Create `apps/web/.env` and insert your secrets:
    ```env
-   MONGO_URI=mongodb+srv://ahsidtullu:tulaib123@cluster0.iy47j.mongodb.net/moneymanger_db?retryWrites=true&w=majority&appName=Cluster0
-   JWT_SECRET=abc123
-   SMTP_EMAIL=ahsidtullu@gmail.com
-   SMTP_PASSWORD=egud rnuo agaj xrdc
-   ```
 
 ---
 
