@@ -1,0 +1,4209 @@
+```text
+MASTER FULL-STACK SOFTWARE ENGINEERING PROMPT
+GLOBAL PERSONAL FINANCE / EXPENSE TRACKING PLATFORM
+MOBILE APP + ADMIN PANEL + SHARED NEXT.JS API
+
+============================================================
+ROLE
+============================================================
+
+Act as a Senior Full-Stack Software Engineer, Senior React Native Engineer, Senior Next.js Engineer, Backend Architect, Database Architect, Security Engineer, DevOps Engineer, Product Engineer, and Professional UI/UX Designer.
+
+You are responsible for designing and implementing a production-quality global personal finance and expense tracking platform.
+
+This is NOT a demo application.
+
+This is NOT a simple CRUD expense tracker.
+
+This is NOT a family-only application.
+
+The initial version may be used by my family and close users, but the architecture MUST be designed from day one as a real public product that can eventually be published on:
+
+- Google Play Store
+- Apple App Store
+- Web
+
+and used by users anywhere in the world.
+
+The system must contain:
+
+1. React Native mobile application for iOS and Android
+2. Next.js web application for the Admin Panel
+3. Next.js backend/API layer
+4. MongoDB Atlas database
+5. Shared business/domain logic where appropriate
+6. Shared API used by both:
+   - Mobile application
+   - Admin panel
+
+The most important architectural principle is:
+
+                    ┌─────────────────────────┐
+                    │      MOBILE APP         │
+                    │ React Native + Expo     │
+                    └────────────┬────────────┘
+                                 │
+                                 │ HTTPS
+                                 ▼
+                    ┌─────────────────────────┐
+                    │      NEXT.JS API        │
+                    │                         │
+                    │ Authentication          │
+                    │ Authorization            │
+                    │ Validation               │
+                    │ Business Logic           │
+                    │ Transactions             │
+                    │ Analytics               │
+                    │ Admin APIs               │
+                    └────────────┬────────────┘
+                                 │
+                    ┌────────────┴────────────┐
+                    │                         │
+                    ▼                         ▼
+             MongoDB Atlas              Admin Web App
+                                      Next.js + React
+                                             │
+                                             │ HTTPS
+                                             ▼
+                                       Same Next.js API
+
+The mobile application and admin panel MUST use the same backend/API and business rules.
+
+Do NOT create separate duplicate backend implementations for mobile and admin.
+
+Do NOT create duplicate business logic in the admin frontend.
+
+The backend is the authoritative layer.
+
+============================================================
+1. PRODUCT VISION
+============================================================
+
+Build a modern personal finance application that allows users to:
+
+- Track income
+- Track expenses
+- Track available balance
+- Organize transactions into categories
+- Add multiple transactions on the same day
+- Add multiple transactions under the same category on the same day
+- View transactions by day
+- View transactions by week
+- View transactions by month
+- View transactions by year
+- View financial activity in a calendar
+- View category-wise spending
+- View income vs expenses
+- View spending trends
+- Search transactions
+- Filter transactions
+- Create custom categories
+- Manage accounts/wallets
+- Select currencies
+- Manage personal preferences
+- Synchronize data across devices
+- Sign up with email/password
+- Sign in with Google
+- Securely manage private financial data
+
+The Admin Panel should allow authorized administrators to:
+
+- View platform statistics
+- Manage users
+- View user profiles
+- Manage categories
+- Manage system/default categories
+- Monitor transactions where appropriate and legally permitted
+- Manage user accounts/status
+- View platform analytics
+- Manage configuration
+- Manage reports
+- Monitor system health
+- Manage administrative roles
+- Review security/audit information
+- Perform controlled support operations
+
+The admin panel MUST NOT automatically give administrators unrestricted access to private financial information.
+
+Sensitive financial data access must be explicitly permission-controlled and auditable.
+
+============================================================
+2. PRODUCT REFERENCES
+============================================================
+
+Use these as UX/product inspiration:
+
+Google Play:
+https://play.google.com/store/apps/details?id=ru.innim.my_finance&hl=en
+
+Happy Giraffe:
+https://happygiraffe.org/budgeting-app/
+
+Also use the provided screenshot as visual inspiration.
+
+Study useful UX concepts such as:
+
+- Simple expense entry
+- Income/expense separation
+- Category-based tracking
+- Financial dashboard
+- Calendar-based tracking
+- Weekly/monthly organization
+- Charts
+- Balance presentation
+- Transaction history
+- Category breakdown
+- Clean mobile interaction
+
+IMPORTANT:
+
+Do NOT copy:
+
+- Branding
+- Logo
+- Exact colors
+- Proprietary assets
+- Exact screen layouts
+- Text
+- Source code
+- Visual identity
+
+Create an ORIGINAL product design.
+
+============================================================
+3. CORE TECHNOLOGY STACK
+============================================================
+
+MOBILE:
+
+- React Native
+- Expo
+- TypeScript
+- Expo Router
+- TanStack Query
+- React Hook Form
+- Zod
+- NativeWind OR another well-structured React Native styling solution
+- React Native SVG
+- Appropriate charting library
+- Expo Secure Store
+- Expo Notifications when required
+
+ADMIN WEB:
+
+- Next.js
+- React
+- TypeScript
+- App Router
+- Tailwind CSS
+- A mature component system such as shadcn/ui where appropriate
+- TanStack Query where server-state management is useful
+- React Hook Form
+- Zod
+- Recharts or another appropriate charting library
+
+BACKEND:
+
+- Next.js
+- TypeScript
+- App Router / Route Handlers
+- REST API
+- Zod
+- MongoDB
+- Mongoose or another production-quality MongoDB data-access layer
+
+DATABASE:
+
+- MongoDB Atlas
+
+DEPLOYMENT:
+
+Mobile:
+- Expo / EAS
+
+Admin + API:
+- Vercel
+
+Database:
+- MongoDB Atlas
+
+============================================================
+4. IMPORTANT ARCHITECTURAL DECISION
+============================================================
+
+The Next.js application has TWO responsibilities:
+
+A. ADMIN WEB APPLICATION
+
+B. BACKEND/API
+
+The admin panel is a web UI.
+
+The API is the backend.
+
+The mobile app consumes the API.
+
+The admin panel also consumes the same API.
+
+Conceptually:
+
+apps/
+    mobile/
+        React Native + Expo
+
+    web/
+        Next.js
+        Admin Panel
+        API
+
+The Next.js web application should expose:
+
+/admin
+/admin/users
+/admin/categories
+/admin/transactions
+/admin/analytics
+/admin/settings
+
+and API routes:
+
+/api/v1/auth/...
+/api/v1/transactions/...
+/api/v1/categories/...
+/api/v1/accounts/...
+/api/v1/analytics/...
+/api/v1/admin/...
+
+The Admin UI must NOT directly access MongoDB.
+
+The mobile app must NOT directly access MongoDB.
+
+Only server-side API/services access MongoDB.
+
+============================================================
+5. SHARED API PRINCIPLE
+============================================================
+
+There should be ONE authoritative backend.
+
+Example:
+
+Mobile:
+
+React Native
+    ↓
+API Client
+    ↓
+/api/v1/transactions
+
+Admin:
+
+Next.js Admin UI
+    ↓
+API Client
+    ↓
+/api/v1/admin/users
+/api/v1/admin/analytics
+/api/v1/categories
+
+Both ultimately use the same backend domain/services and database.
+
+Do NOT implement:
+
+Mobile → separate backend
+
+Admin → separate backend
+
+unless there is a strong architectural requirement.
+
+Instead:
+
+Mobile
+   \
+    \
+     → SAME API / SAME SERVICES / SAME DATABASE
+    /
+   /
+Admin
+
+This ensures:
+
+- Consistent business rules
+- Consistent validation
+- Consistent financial calculations
+- Easier maintenance
+- Easier testing
+- Easier deployment
+- No duplicated backend logic
+
+============================================================
+6. RECOMMENDED MONOREPO ARCHITECTURE
+============================================================
+
+Prefer:
+
+apps/
+    mobile/
+        app/
+        src/
+
+    web/
+        app/
+        src/
+
+packages/
+    shared/
+        types/
+        schemas/
+        constants/
+        utils/
+
+    api-client/
+        client/
+        types/
+
+    config/
+        eslint/
+        typescript/
+
+The web application contains:
+
+apps/web/
+    app/
+        admin/
+        api/
+        login/
+        ...
+
+    src/
+        modules/
+            auth/
+            users/
+            transactions/
+            categories/
+            accounts/
+            analytics/
+            admin/
+        components/
+        lib/
+        services/
+        hooks/
+        schemas/
+        types/
+        utils/
+
+The mobile application contains:
+
+apps/mobile/
+    app/
+        (auth)/
+        (app)/
+            index
+            transactions
+            calendar
+            analytics
+            settings
+
+    src/
+        features/
+            auth/
+            dashboard/
+            transactions/
+            categories/
+            accounts/
+            calendar/
+            analytics/
+            settings/
+
+The backend/domain layer should be structured so the Admin UI and API do not contain duplicated business logic.
+
+============================================================
+7. BACKEND ARCHITECTURE
+============================================================
+
+Use a modular monolith.
+
+DO NOT start with microservices.
+
+Structure:
+
+Next.js
+    ↓
+API Route Handler
+    ↓
+Controller / Request Handler
+    ↓
+Service
+    ↓
+Repository / Data Access
+    ↓
+MongoDB
+
+Example:
+
+POST /api/v1/transactions
+
+Transaction API
+    ↓
+Transaction Service
+    ↓
+Transaction Repository
+    ↓
+MongoDB
+
+For admin:
+
+GET /api/v1/admin/users
+
+Admin API
+    ↓
+Admin Authorization
+    ↓
+User Service
+    ↓
+User Repository
+    ↓
+MongoDB
+
+Business rules must live in services/domain logic, NOT inside:
+
+- React components
+- Mobile screens
+- Admin pages
+- API route handlers
+
+============================================================
+8. API VERSIONING
+============================================================
+
+Use:
+
+/api/v1/...
+
+Do not create random unversioned endpoints.
+
+Examples:
+
+/api/v1/auth/register
+/api/v1/auth/login
+/api/v1/auth/google
+/api/v1/auth/logout
+/api/v1/auth/me
+
+/api/v1/transactions
+/api/v1/transactions/:id
+
+/api/v1/categories
+/api/v1/categories/:id
+
+/api/v1/accounts
+/api/v1/accounts/:id
+
+/api/v1/analytics/overview
+/api/v1/analytics/categories
+/api/v1/analytics/trends
+
+/api/v1/admin/users
+/api/v1/admin/users/:id
+/api/v1/admin/analytics
+/api/v1/admin/categories
+/api/v1/admin/audit-logs
+/api/v1/admin/system-config
+
+============================================================
+9. ADMIN API VS USER API
+============================================================
+
+The same backend should contain both user-facing and admin-facing APIs.
+
+USER APIs:
+
+/api/v1/transactions
+/api/v1/categories
+/api/v1/accounts
+/api/v1/analytics
+
+ADMIN APIs:
+
+/api/v1/admin/users
+/api/v1/admin/analytics
+/api/v1/admin/categories
+/api/v1/admin/transactions
+/api/v1/admin/audit-logs
+/api/v1/admin/configuration
+
+The distinction is authorization.
+
+A normal user must never be able to call an admin endpoint successfully.
+
+Every admin endpoint must verify:
+
+1. Authentication
+2. User identity
+3. Admin role
+4. Required permission
+5. Resource-level authorization where applicable
+
+============================================================
+10. ADMIN PANEL AUTHENTICATION
+============================================================
+
+The Admin Panel must have secure authentication.
+
+Do not simply hide the /admin route.
+
+A user must not become an administrator by navigating to:
+
+/admin
+
+or modifying frontend state.
+
+Admin access MUST be enforced on the backend.
+
+Admin users should authenticate through the same secure identity infrastructure where practical, but roles and permissions determine access.
+
+Possible roles:
+
+SUPER_ADMIN
+ADMIN
+SUPPORT
+ANALYST
+MODERATOR
+
+Do not assume all admins have the same privileges.
+
+============================================================
+11. RBAC
+============================================================
+
+Implement Role-Based Access Control.
+
+Example:
+
+SUPER_ADMIN:
+
+- Manage administrators
+- Manage users
+- Manage system configuration
+- View platform analytics
+- View audit logs
+- Manage categories
+- Full administrative permissions
+
+ADMIN:
+
+- Manage users
+- Manage categories
+- View analytics
+- Support operations
+
+SUPPORT:
+
+- View user account information necessary for support
+- Perform limited support operations
+- No unrestricted financial-data access
+
+ANALYST:
+
+- View aggregated platform analytics
+- No direct personal financial data access
+
+MODERATOR:
+
+- Limited user/account management
+
+The exact permissions can be refined.
+
+Use permissions rather than hard-coding checks everywhere.
+
+Example:
+
+users.read
+users.update
+users.suspend
+transactions.read
+transactions.support_read
+categories.manage
+analytics.read
+audit_logs.read
+admin.manage
+
+============================================================
+12. ADMIN FINANCIAL DATA PRIVACY
+============================================================
+
+This is CRITICAL.
+
+The application contains sensitive financial data.
+
+Do NOT create a dashboard where every administrator can casually browse every user's expenses.
+
+Admin access to financial information must be:
+
+- Role controlled
+- Permission controlled
+- Purpose controlled
+- Audited
+- Minimal
+
+Prefer aggregated information whenever possible.
+
+For example, an analyst can see:
+
+Total platform expenses
+Total users
+Total transactions
+Daily transaction count
+Monthly transaction volume
+Category popularity
+
+without seeing:
+
+"User X spent Rs. 12,500 at Restaurant Y."
+
+If support requires transaction access, require an appropriate permission and log the action.
+
+============================================================
+13. ADMIN AUDIT LOGGING
+============================================================
+
+Create an audit log architecture.
+
+Track sensitive admin operations such as:
+
+- Admin login
+- User viewed
+- User updated
+- User suspended
+- User restored
+- Financial record accessed
+- Financial record modified
+- Category modified
+- Configuration changed
+- Admin role changed
+
+Audit record:
+
+{
+    _id,
+    actorUserId,
+    actorRole,
+    action,
+    resourceType,
+    resourceId,
+    metadata,
+    ipAddress,
+    userAgent,
+    createdAt
+}
+
+Do not store sensitive financial data unnecessarily in metadata.
+
+Audit logs should be append-oriented and protected from ordinary admins.
+
+============================================================
+14. USER DATA ISOLATION
+============================================================
+
+Every user-owned record MUST contain:
+
+userId
+
+Examples:
+
+User A:
+
+Transaction A
+Category A
+Account A
+
+User B:
+
+Transaction B
+Category B
+Account B
+
+User A MUST NEVER access User B's data.
+
+This must be enforced server-side.
+
+NEVER trust:
+
+req.body.userId
+
+or:
+
+req.query.userId
+
+or:
+
+URL userId
+
+for determining the authenticated user's ownership.
+
+Use the authenticated session identity.
+
+Bad:
+
+Transaction.find({
+    userId: req.body.userId
+})
+
+Correct:
+
+Transaction.find({
+    userId: authenticatedUserId
+})
+
+============================================================
+15. ADMIN AUTHORIZATION
+============================================================
+
+Admin authorization must be separate from ordinary user ownership.
+
+Example:
+
+User API:
+
+authenticatedUserId = session.user.id
+
+Admin API:
+
+authenticatedAdminId = session.user.id
+
+Then:
+
+requirePermission(
+    authenticatedAdminId,
+    "users.read"
+)
+
+The frontend must never be the authority for:
+
+isAdmin
+role
+permissions
+
+Those must be verified server-side.
+
+============================================================
+16. USER MODEL
+============================================================
+
+Design:
+
+User:
+
+{
+    _id,
+    name,
+    email,
+    passwordHash,
+    avatar,
+    authProviders,
+    emailVerified,
+
+    role,
+    permissions,
+
+    status,
+
+    preferredCurrency,
+    locale,
+    timezone,
+    weekStartsOn,
+
+    onboardingCompleted,
+
+    createdAt,
+    updatedAt
+}
+
+Possible status:
+
+ACTIVE
+SUSPENDED
+DELETED
+PENDING_VERIFICATION
+
+Do not allow normal users to update:
+
+role
+permissions
+status
+
+through ordinary profile APIs.
+
+============================================================
+17. ADMIN USER MANAGEMENT
+============================================================
+
+Admin panel should support:
+
+Users list
+
+Columns:
+
+- Name
+- Email
+- Status
+- Role
+- Currency
+- Registration date
+- Last activity
+- Authentication provider
+
+Actions:
+
+- View
+- Suspend
+- Restore
+- Search
+- Filter
+- Sort
+- Pagination
+
+Do not expose passwords.
+
+Do not expose password hashes.
+
+Do not expose authentication secrets.
+
+============================================================
+18. ADMIN USER DETAIL
+============================================================
+
+User detail page:
+
+Profile information
+
+Authentication provider
+
+Account status
+
+Registration date
+
+Last activity
+
+Preferred currency
+
+Timezone
+
+Account count
+
+Transaction count
+
+Aggregated financial statistics
+
+Potentially:
+
+Total income
+Total expense
+Current balance
+
+ONLY if the logged-in administrator has explicit permission to view financial information.
+
+If the admin does not have permission:
+
+Do not return the sensitive data from the backend.
+
+Do not merely hide it in React.
+
+============================================================
+19. ADMIN DASHBOARD
+============================================================
+
+Create a professional admin dashboard.
+
+Example:
+
+----------------------------------
+Admin Dashboard
+----------------------------------
+
+Total Users
+125,420
+
+Active Users
+84,220
+
+New Users
++1,240
+
+Transactions
+2.4M
+
+----------------------------------
+
+Platform Transaction Volume
+
+Chart
+
+----------------------------------
+
+Income vs Expense
+
+Chart
+
+----------------------------------
+
+Popular Categories
+
+Food
+Transportation
+Shopping
+Bills
+
+----------------------------------
+
+Recent System Activity
+
+...
+
+----------------------------------
+
+The admin dashboard should prioritize aggregated information.
+
+Do not load huge datasets into the browser.
+
+Use backend aggregation APIs.
+
+============================================================
+20. ADMIN ANALYTICS
+============================================================
+
+Admin analytics should include:
+
+- Total users
+- New users
+- Active users
+- Transaction count
+- Transaction volume
+- Income volume
+- Expense volume
+- User growth
+- Daily activity
+- Monthly activity
+- Category popularity
+- Currency distribution
+- Country/locale distribution where legitimately collected
+
+Do not expose personal financial data when aggregated statistics are sufficient.
+
+============================================================
+21. ADMIN CATEGORY MANAGEMENT
+============================================================
+
+Admin should manage system categories.
+
+System categories are different from user-created categories.
+
+Example:
+
+System:
+
+Food
+Transportation
+Shopping
+Bills
+Health
+Entertainment
+
+User:
+
+My Gym
+Gaming
+Pet Supplies
+
+Admin can:
+
+- Create system category
+- Rename system category
+- Change icon
+- Archive category
+- Set sort order
+
+Be extremely careful when modifying system categories referenced by user transactions.
+
+Do not break historical data.
+
+============================================================
+22. CATEGORY SCHEMA
+============================================================
+
+Category:
+
+{
+    _id,
+    userId,
+    name,
+    icon,
+    type,
+    isSystem,
+    isArchived,
+    sortOrder,
+    createdAt,
+    updatedAt
+}
+
+For system categories:
+
+isSystem = true
+
+and userId may be null/global depending on architecture.
+
+For user-created categories:
+
+isSystem = false
+
+userId = authenticatedUserId
+
+Never allow one user to modify another user's category.
+
+============================================================
+23. DEFAULT CATEGORIES
+============================================================
+
+Provide default categories for new users.
+
+EXPENSE:
+
+Food & Dining
+- Restaurants
+- Fast Food
+- Coffee
+- Groceries
+
+Transportation
+- Fuel
+- Public Transport
+- Taxi / Ride Sharing
+- Car Maintenance
+
+Bills & Utilities
+- Electricity
+- Gas
+- Water
+- Internet
+- Mobile / Phone
+
+Shopping
+- Clothing
+- Electronics
+- Household
+- Personal Care
+
+Health
+- Medicine
+- Doctor
+- Pharmacy
+- Fitness
+
+Entertainment
+- Movies
+- Games
+- Subscriptions
+- Events
+
+Education
+- Courses
+- Books
+- School / University
+
+Home
+- Rent
+- Maintenance
+- Furniture
+
+Family
+- Children
+- Parents
+- Gifts
+
+Travel
+- Hotels
+- Flights
+- Travel Expenses
+
+Other
+- Miscellaneous
+
+INCOME:
+
+Salary
+Freelance
+Business
+Bonus
+Investment
+Gift
+Other Income
+
+Users can add their own categories.
+
+============================================================
+24. ACCOUNT / WALLET MODEL
+============================================================
+
+Support multiple accounts.
+
+Examples:
+
+Cash
+Bank Account
+Savings
+Wallet
+Credit Card
+
+Schema:
+
+{
+    _id,
+    userId,
+    name,
+    type,
+    currency,
+    initialBalance,
+    isActive,
+    createdAt,
+    updatedAt
+}
+
+Do not assume one user only has one account.
+
+============================================================
+25. TRANSACTION MODEL
+============================================================
+
+Transaction:
+
+{
+    _id,
+    userId,
+    accountId,
+    categoryId,
+
+    type,
+
+    amount,
+    currency,
+
+    title,
+    description,
+
+    date,
+
+    createdAt,
+    updatedAt
+}
+
+type:
+
+income
+expense
+
+Every transaction belongs to:
+
+- User
+- Account
+- Category where applicable
+
+============================================================
+26. MONEY ACCURACY
+============================================================
+
+Financial calculations must be accurate.
+
+Do NOT use JavaScript floating-point numbers carelessly.
+
+Choose a reliable money representation:
+
+- Decimal128
+OR
+- Integer minor units
+OR
+- another properly designed representation
+
+Document the decision.
+
+Backend is the source of truth.
+
+Frontend values are never authoritative.
+
+============================================================
+27. BALANCE
+============================================================
+
+Basic:
+
+Balance =
+Total Income - Total Expense
+
+Account:
+
+Account Balance =
+Initial Balance
++ Income
+- Expenses
+
+If cached balances are used:
+
+- Define source of truth
+- Define consistency strategy
+- Ensure mutations remain reliable
+
+============================================================
+28. IDEMPOTENCY
+============================================================
+
+Mobile networks retry requests.
+
+Users may double tap buttons.
+
+The API must prevent accidental duplicate financial transactions.
+
+Use idempotency keys where appropriate.
+
+Example:
+
+POST /api/v1/transactions
+
+Client sends:
+
+Idempotency-Key: unique-request-id
+
+If the same request is retried, the backend must not create duplicate transactions.
+
+============================================================
+29. AUTHENTICATION
+============================================================
+
+Support:
+
+Email/password
+Google OAuth
+
+Registration:
+
+- Name
+- Email
+- Password
+- Confirm password
+
+Login:
+
+- Email
+- Password
+- Continue with Google
+- Forgot password
+
+Also:
+
+- Logout
+- Session persistence
+- Email verification where appropriate
+- Password reset
+- Account recovery
+
+Never store plaintext passwords.
+
+Use Argon2id or another modern secure password hashing algorithm.
+
+============================================================
+30. GOOGLE AUTHENTICATION
+============================================================
+
+Implement real OAuth/OpenID Connect.
+
+Do NOT fake Google authentication.
+
+Do NOT trust Google identity information sent blindly by the mobile app.
+
+Validate credentials on the backend.
+
+If the same verified email already exists:
+
+Safely handle account linking rather than accidentally creating duplicate financial accounts.
+
+Never expose Google client secrets to React Native.
+
+============================================================
+31. SESSION SECURITY
+============================================================
+
+Use a secure session architecture.
+
+Consider:
+
+- Expiration
+- Refresh
+- Rotation
+- Revocation
+- Secure storage
+- Logout
+- Multiple devices
+
+Mobile session credentials must be stored using secure platform-backed storage such as Expo Secure Store.
+
+Admin browser authentication must use secure web session mechanisms.
+
+Do not store sensitive admin authentication data in insecure local storage.
+
+============================================================
+32. PASSWORD RESET
+============================================================
+
+Password reset must:
+
+- Use secure random tokens
+- Expire
+- Be single-use
+- Be rate-limited
+- Never reveal whether arbitrary emails exist unnecessarily
+
+============================================================
+33. ONBOARDING
+============================================================
+
+New user flow:
+
+Welcome
+
+"Take control of your money."
+
+Then:
+
+Choose currency
+
+Choose timezone
+
+Ready
+
+"Start by adding your first transaction."
+
+Actions:
+
+Add Income
+Add Expense
+
+Do not make onboarding unnecessarily long.
+
+============================================================
+34. MOBILE HOME DASHBOARD
+============================================================
+
+Create a polished dashboard.
+
+Example:
+
+Good morning
+
+August 2026
+
+Available Balance
+
+Rs. 84,500
+
+Income             Expenses
+Rs. 120,000        Rs. 35,500
+
+This Week
+
+Spent
+Rs. 8,250
+
+Quick Actions:
+
++ Add Income
++ Add Expense
+
+Recent Transactions
+
+Today
+
+Food                 - Rs. 1,200
+Transport            - Rs. 500
+
+Yesterday
+
+Salary               + Rs. 50,000
+
+Spending by Category
+
+Food                 32%
+Shopping             25%
+Transport            18%
+
+Create an original UI.
+
+============================================================
+35. ADD EXPENSE
+============================================================
+
+Must be extremely fast.
+
+Required:
+
+Amount
+Category
+Date
+
+Optional:
+
+Title
+Description
+Account
+
+Example:
+
+Amount:
+1200
+
+Category:
+Food
+
+Date:
+Today
+
+Title:
+Lunch
+
+Save.
+
+After success:
+
+- Update balance
+- Update summary
+- Update transaction list
+- Update analytics
+- Update calendar
+
+Use TanStack Query correctly.
+
+============================================================
+36. ADD INCOME
+============================================================
+
+Fields:
+
+Amount
+Category/source
+Date
+Account
+Title
+Description
+
+Support:
+
+Salary
+Freelance
+Business
+Bonus
+Gift
+Investment
+
+Multiple income transactions on same day are allowed.
+
+============================================================
+37. MULTIPLE TRANSACTIONS
+============================================================
+
+The system MUST support multiple transactions on the same day.
+
+Example:
+
+August 9:
+
+Food
+Breakfast - 500
+Lunch - 1200
+Dinner - 1500
+
+Transport
+Uber - 700
+
+Shopping
+Clothes - 4500
+
+Each transaction remains independent.
+
+The UI may group them.
+
+============================================================
+38. TRANSACTION HISTORY
+============================================================
+
+Support:
+
+DAY
+WEEK
+MONTH
+YEAR
+
+Example:
+
+August 2026
+
+Week 1
+
+August 1
+
+Food - 800
+Transport - 300
+Salary + 50,000
+
+Daily:
+
+Income: 50,000
+Expense: 1,100
+Net: 48,900
+
+Support:
+
+- Edit
+- Delete/archive
+- View details
+- Search
+- Filter
+
+============================================================
+39. CALENDAR
+============================================================
+
+Create financial calendar.
+
+Example:
+
+9
++50K
+-6.9K
+
+Allow date selection.
+
+Show daily:
+
+Income
+Expense
+Net
+
+Handle:
+
+- Leap years
+- Month boundaries
+- Timezones
+- Week-start preferences
+
+============================================================
+40. DAY VIEW
+============================================================
+
+Example:
+
+Sunday
+9 August 2026
+
+Income:
+
++ Rs. 50,000
+
+Expenses:
+
+Food
+Breakfast 500
+Lunch 1,200
+
+Transport
+Uber 700
+
+Shopping
+Clothes 4,500
+
+Summary:
+
+Income 50,000
+Expense 6,900
+Net 43,100
+
+============================================================
+41. WEEK VIEW
+============================================================
+
+Display:
+
+Monday
+Tuesday
+Wednesday
+Thursday
+Friday
+Saturday
+Sunday
+
+For each:
+
+Income
+Expense
+Net
+
+Top:
+
+Weekly Income
+Weekly Expenses
+Weekly Net
+
+Handle week boundaries correctly.
+
+============================================================
+42. MONTH VIEW
+============================================================
+
+Example:
+
+August 2026
+
+Income
+150,000
+
+Expenses
+72,450
+
+Remaining
+77,550
+
+Show:
+
+- Daily spending trend
+- Weekly totals
+- Category breakdown
+- Largest transactions
+- Average daily spending
+- Income vs expense
+
+============================================================
+43. YEAR VIEW
+============================================================
+
+2026
+
+January
+Income
+Expense
+Net
+
+February
+Income
+Expense
+Net
+
+...
+
+December
+Income
+Expense
+Net
+
+Show:
+
+- Annual income
+- Annual expenses
+- Annual net
+- Highest spending month
+- Lowest spending month
+- Category breakdown
+- Monthly trend
+
+Use backend aggregation.
+
+============================================================
+44. SEARCH
+============================================================
+
+Search:
+
+- Title
+- Description
+- Category
+
+Filters:
+
+- Income
+- Expense
+- Category
+- Account
+- Date range
+- Amount range
+
+Use server-side search.
+
+Debounce search.
+
+Use pagination.
+
+============================================================
+45. ANALYTICS
+============================================================
+
+User analytics:
+
+- Income vs Expense
+- Spending trend
+- Category breakdown
+- Weekly spending
+- Monthly comparison
+- Top categories
+- Average spending
+- Largest transactions
+
+Charts must be useful.
+
+Do not add charts merely for decoration.
+
+============================================================
+46. CATEGORY ANALYTICS
+============================================================
+
+Example:
+
+Food
+
+August:
+12,500
+
+July:
+10,200
+
+Change:
++22.5%
+
+Show:
+
+- Total spent
+- Transaction count
+- Average transaction
+- Monthly total
+- Comparison
+
+Backend should calculate these values reliably.
+
+============================================================
+47. MULTI-CURRENCY
+============================================================
+
+The application must support global users.
+
+Do not hard-code PKR.
+
+Support:
+
+PKR
+USD
+EUR
+GBP
+AED
+SAR
+INR
+CAD
+AUD
+JPY
+CNY
+
+and other currencies.
+
+User has:
+
+preferredCurrency
+
+Accounts may have:
+
+currency
+
+Do NOT silently convert currencies.
+
+If conversion is introduced later, it must use reliable exchange-rate data.
+
+============================================================
+48. DATE / TIMEZONE
+============================================================
+
+Centralize date utilities.
+
+Support:
+
+- User timezone
+- UTC storage strategy where appropriate
+- Local calendar date
+- Day boundaries
+- Week boundaries
+- Month boundaries
+- Year boundaries
+- Leap years
+
+Example:
+
+A transaction at 11:30 PM local time must appear on the correct local day.
+
+============================================================
+49. INTERNATIONALIZATION
+============================================================
+
+Initial:
+
+English
+
+Future:
+
+Urdu
+Arabic
+Spanish
+French
+German
+etc.
+
+Do not hard-code UI text throughout business logic.
+
+Prepare a localization system.
+
+Architecture must support RTL.
+
+============================================================
+50. ADMIN WEB UX
+============================================================
+
+The admin panel is a separate experience from the mobile app.
+
+It should be desktop-first but responsive.
+
+Navigation:
+
+Dashboard
+Users
+Transactions
+Categories
+Accounts
+Analytics
+Audit Logs
+System Settings
+Admin Management
+
+Only show navigation items the current admin has permission to access.
+
+============================================================
+51. ADMIN DASHBOARD UX
+============================================================
+
+Professional SaaS-style admin dashboard.
+
+Layout:
+
+Sidebar
+Top navigation
+Page content
+
+Top:
+
+Total Users
+Active Users
+Transactions
+Transaction Volume
+
+Charts:
+
+User Growth
+Transaction Activity
+Income vs Expense
+Category Distribution
+
+Bottom:
+
+Recent Administrative Activity
+
+Do not make the admin panel look like the mobile application.
+
+The mobile app should feel consumer-focused.
+
+The admin panel should feel operational and data-focused.
+
+============================================================
+52. ADMIN USERS TABLE
+============================================================
+
+Use:
+
+Pagination
+Search
+Filtering
+Sorting
+
+Columns:
+
+User
+Email
+Role
+Status
+Currency
+Created
+Last Active
+
+Actions:
+
+View
+Suspend
+Restore
+
+Use server-side pagination.
+
+Do not load all users.
+
+============================================================
+53. ADMIN USER DETAIL
+============================================================
+
+Sections:
+
+Profile
+Authentication
+Account Status
+Preferences
+Accounts
+Transaction Statistics
+Activity
+
+Financial information should only be displayed if the administrator has permission.
+
+============================================================
+54. ADMIN TRANSACTION MANAGEMENT
+============================================================
+
+Create an admin transaction interface ONLY for authorized roles.
+
+Support:
+
+- Search
+- User filter
+- Date filter
+- Category
+- Account
+- Type
+- Amount
+
+However:
+
+Do not expose unrestricted personal financial data to every admin.
+
+Use permissions.
+
+Potential permissions:
+
+transactions.read
+transactions.support_read
+transactions.update
+transactions.delete
+
+Administrative financial actions must be audited.
+
+============================================================
+55. ADMIN CATEGORY MANAGEMENT
+============================================================
+
+Admin can manage global system categories.
+
+System categories should be separated from user-created categories.
+
+When changing a global category:
+
+- Do not break historical transactions.
+- Do not silently change historical meaning.
+- Consider archival.
+- Preserve references.
+
+============================================================
+56. ADMIN SYSTEM SETTINGS
+============================================================
+
+Prepare a controlled configuration area.
+
+Possible configuration:
+
+- System categories
+- Supported currencies
+- Feature flags
+- App version information
+- Maintenance mode
+- Notification configuration
+- Limits
+
+Do not allow arbitrary code/configuration execution from the admin panel.
+
+============================================================
+57. ADMIN ROLE MANAGEMENT
+============================================================
+
+Only SUPER_ADMIN should be able to:
+
+- Create admin
+- Change admin role
+- Revoke admin
+- Change permissions
+
+Every role change must be audited.
+
+An admin must not be able to escalate their own privileges.
+
+============================================================
+58. ADMIN API SECURITY
+============================================================
+
+Every:
+
+/api/v1/admin/*
+
+endpoint must independently verify:
+
+Authentication
++
+Role
++
+Permission
+
+Do not rely on:
+
+React route protection
+Sidebar visibility
+Frontend state
+URL protection
+
+Backend authorization is mandatory.
+
+============================================================
+59. API RESPONSE FORMAT
+============================================================
+
+Use consistent responses.
+
+Success:
+
+{
+    "success": true,
+    "data": {},
+    "message": "Transaction created successfully"
+}
+
+Error:
+
+{
+    "success": false,
+    "message": "Unable to create transaction",
+    "errors": []
+}
+
+Use correct HTTP status codes.
+
+Never expose:
+
+- Stack traces
+- MongoDB internals
+- Password hashes
+- Secrets
+- Internal implementation details
+
+============================================================
+60. VALIDATION
+============================================================
+
+Use Zod.
+
+Validate on backend:
+
+- Amount
+- Currency
+- Date
+- Category
+- Account
+- Email
+- Password
+- Query parameters
+- Pagination
+- Sorting
+- Filters
+
+Frontend validation is for UX.
+
+Backend validation is for security.
+
+============================================================
+61. API CLIENT
+============================================================
+
+Create centralized API clients.
+
+Mobile:
+
+API Client
+    ↓
+Auth
+Transactions
+Categories
+Accounts
+Analytics
+
+Admin:
+
+API Client
+    ↓
+Admin APIs
+
+Do not write raw fetch/axios logic inside every component.
+
+============================================================
+62. TANSTACK QUERY
+============================================================
+
+Use TanStack Query for mobile server state.
+
+Use it in Admin where useful.
+
+Implement:
+
+- Query keys
+- Query hooks
+- Mutations
+- Cache
+- Invalidations
+- Retry
+- Loading
+- Errors
+- Optimistic updates where safe
+
+Do not duplicate API state in Redux unnecessarily.
+
+============================================================
+63. STATE MANAGEMENT
+============================================================
+
+Use:
+
+React state for local UI state.
+
+TanStack Query for server state.
+
+Context only for genuinely global concerns.
+
+Do not over-engineer state management.
+
+============================================================
+64. PROJECT STRUCTURE
+============================================================
+
+Preferred:
+
+apps/
+    mobile/
+        app/
+        src/
+            features/
+                auth/
+                dashboard/
+                transactions/
+                categories/
+                accounts/
+                calendar/
+                analytics/
+                settings/
+            components/
+            hooks/
+            services/
+            lib/
+            utils/
+            constants/
+            types/
+
+    web/
+        app/
+            admin/
+            login/
+            api/
+            ...
+
+        src/
+            modules/
+                auth/
+                users/
+                transactions/
+                categories/
+                accounts/
+                analytics/
+                admin/
+            components/
+            hooks/
+            services/
+            lib/
+            schemas/
+            types/
+            utils/
+
+packages/
+    shared/
+        types/
+        schemas/
+        constants/
+        utils/
+
+    api-client/
+        client/
+        types/
+
+============================================================
+65. FEATURE-BASED ARCHITECTURE
+============================================================
+
+Organize around features.
+
+Mobile:
+
+features/transactions/
+
+    components/
+    hooks/
+    services/
+    schemas/
+    types/
+    utils/
+
+Web:
+
+modules/users/
+
+    components/
+    hooks/
+    services/
+    schemas/
+    types/
+
+Avoid one giant:
+
+components/
+
+folder containing the entire application.
+
+============================================================
+66. UI COMPONENTS
+============================================================
+
+Mobile:
+
+BalanceCard
+TransactionItem
+TransactionGroup
+CategoryIcon
+CategorySelector
+AmountInput
+DateSelector
+PeriodSelector
+FinancialSummary
+SpendingChart
+CategoryBreakdown
+Calendar
+BottomSheet
+ConfirmDialog
+EmptyState
+LoadingState
+ErrorState
+SearchBar
+
+Admin:
+
+AdminSidebar
+AdminHeader
+DataTable
+StatCard
+FilterBar
+SearchInput
+UserStatusBadge
+RoleBadge
+PermissionGuard
+ChartCard
+ConfirmDialog
+Pagination
+EmptyState
+ErrorState
+LoadingState
+
+Create reusable components only where appropriate.
+
+============================================================
+67. DESIGN SYSTEM
+============================================================
+
+Centralize:
+
+Colors
+Typography
+Spacing
+Radius
+Shadows
+Icons
+Component sizes
+
+Semantic colors:
+
+Income
+Expense
+Success
+Warning
+Error
+Neutral
+
+Support:
+
+Light
+Dark
+System
+
+Do not hard-code colors throughout components.
+
+============================================================
+68. MOBILE NAVIGATION
+============================================================
+
+Suggested:
+
+Home
+Transactions
+Calendar
+Analytics
+Settings
+
+Primary:
+
++
+
+Add Income
+Add Expense
+
+============================================================
+69. ADMIN NAVIGATION
+============================================================
+
+Suggested:
+
+Dashboard
+Users
+Transactions
+Categories
+Analytics
+Audit Logs
+System Settings
+Admin Management
+
+Navigation should be permission-aware.
+
+============================================================
+70. PERFORMANCE
+============================================================
+
+Do not:
+
+- Download huge datasets
+- Calculate massive analytics on clients
+- Render huge lists without virtualization
+- Re-render entire dashboards unnecessarily
+
+Use:
+
+- Pagination
+- Cursor pagination where appropriate
+- MongoDB indexes
+- Aggregation pipelines
+- TanStack Query
+- Caching
+- Efficient charts
+- Debounced search
+
+============================================================
+71. DATABASE INDEXING
+============================================================
+
+Transactions:
+
+userId + date
+userId + type + date
+userId + categoryId + date
+userId + accountId + date
+
+Users:
+
+email unique
+status
+createdAt
+
+Categories:
+
+userId + name
+
+Accounts:
+
+userId + createdAt
+
+Audit logs:
+
+actorUserId + createdAt
+resourceType + resourceId
+createdAt
+
+Only create indexes that support real query patterns.
+
+============================================================
+72. MONGODB SECURITY
+============================================================
+
+MongoDB credentials must remain server-side.
+
+Use MongoDB Atlas.
+
+Do not expose:
+
+MONGODB_URI
+
+to:
+
+- React Native
+- Browser
+- Admin frontend
+
+Use secure environment variables.
+
+============================================================
+73. SERVERLESS / VERCEL COMPATIBILITY
+============================================================
+
+The Next.js API will be deployed to Vercel.
+
+Do not rely on:
+
+- Persistent in-memory state
+- Local filesystem persistence
+- Long-running server processes
+- Local background workers
+- Process-level sessions
+
+Use serverless-compatible architecture.
+
+MongoDB connection management must account for serverless execution.
+
+============================================================
+74. ENVIRONMENT MANAGEMENT
+============================================================
+
+Use:
+
+Development
+Staging
+Production
+
+Create:
+
+.env.example
+
+Potential:
+
+MONGODB_URI
+AUTH_SECRET
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+API_BASE_URL
+APP_ENV
+
+Never commit production secrets.
+
+Clearly separate:
+
+server-only variables
+
+from:
+
+client-safe variables.
+
+============================================================
+75. OFFLINE / NETWORK RESILIENCE
+============================================================
+
+Mobile users may lose connectivity.
+
+Handle:
+
+- Slow network
+- Offline state
+- Timeout
+- Retry
+- App backgrounding
+- App reopening
+
+At minimum:
+
+- Never lose entered data
+- Show useful errors
+- Retry safe requests
+- Preserve unsaved form data where possible
+
+Design boundaries for future offline-first synchronization.
+
+Do not fake offline support.
+
+============================================================
+76. ERROR HANDLING
+============================================================
+
+Backend errors:
+
+ValidationError
+AuthenticationError
+AuthorizationError
+NotFoundError
+ConflictError
+RateLimitError
+DatabaseError
+InternalServerError
+
+Centralized error handling.
+
+Frontend converts technical errors into human-readable messages.
+
+Bad:
+
+MongoServerError...
+
+Good:
+
+"Couldn't save your expense. Please try again."
+
+============================================================
+77. RATE LIMITING
+============================================================
+
+Protect:
+
+Login
+Registration
+Password Reset
+Google Auth
+Transaction Creation
+Search
+Admin APIs
+
+Use sensible limits.
+
+Do not create limits that make normal use impossible.
+
+Admin APIs may have stricter limits for sensitive operations.
+
+============================================================
+78. FINANCIAL DATA CONSISTENCY
+============================================================
+
+Financial operations must be reliable.
+
+Consider:
+
+- Idempotency
+- Atomic operations
+- MongoDB transactions where needed
+- Validation
+- Ownership
+- Referential integrity
+- Safe retries
+
+Never prioritize UI speed over financial correctness.
+
+============================================================
+79. SOFT DELETE / ARCHIVING
+============================================================
+
+Do not casually destroy financial history.
+
+Transactions:
+
+Prefer controlled deletion/archiving according to product requirements.
+
+Categories:
+
+Archive rather than destroy if referenced.
+
+Users:
+
+Account deletion must follow an explicit secure process.
+
+============================================================
+80. PRIVACY
+============================================================
+
+Financial data is sensitive.
+
+Use privacy-by-design principles.
+
+Minimize:
+
+- Data collected
+- Data exposed
+- Data logged
+- Data accessible by administrators
+
+Do not use personal financial information for unnecessary tracking.
+
+============================================================
+81. ACCOUNT DELETION
+============================================================
+
+Users should eventually be able to delete their account.
+
+Require:
+
+- Authentication
+- Confirmation
+- Clear explanation
+- Secure processing
+
+Handle all related user-owned data according to defined retention/privacy policy.
+
+============================================================
+82. EXPORT
+============================================================
+
+Architecture should support:
+
+CSV
+JSON
+PDF
+
+Future feature.
+
+Store data in a way that makes accurate exports possible.
+
+============================================================
+83. ADMIN REPORTS
+============================================================
+
+Future admin reports may include:
+
+User growth
+Transaction volume
+Platform usage
+Category popularity
+Currency distribution
+System health
+
+Prefer aggregated reports.
+
+============================================================
+84. INTERNATIONALIZATION
+============================================================
+
+Initial:
+
+English.
+
+Prepare for:
+
+Urdu
+Arabic
+Spanish
+French
+German
+
+Support RTL architecture.
+
+============================================================
+85. DATE FORMATTING
+============================================================
+
+Use locale-aware date formatting.
+
+Do not manually construct date strings throughout the app.
+
+Centralize:
+
+formatDate()
+formatMonth()
+formatWeek()
+formatYear()
+formatRelativeDate()
+
+============================================================
+86. NUMBER / CURRENCY FORMATTING
+============================================================
+
+Centralize money formatting.
+
+Examples:
+
+PKR:
+Rs. 84,500
+
+USD:
+$84,500.00
+
+EUR:
+€84,500.00
+
+Do not hard-code currency symbols.
+
+============================================================
+87. MOBILE ACCESSIBILITY
+============================================================
+
+Support:
+
+- Screen readers
+- Accessibility labels
+- Contrast
+- Touch targets
+- Dynamic text
+- Meaningful icons
+- Color-independent information
+
+============================================================
+88. ADMIN ACCESSIBILITY
+============================================================
+
+Admin panel should support:
+
+- Keyboard navigation
+- Focus states
+- Screen readers
+- Accessible tables
+- Accessible dialogs
+- Proper form labels
+- Color contrast
+
+============================================================
+89. DARK MODE
+============================================================
+
+Mobile and Admin should support:
+
+Light
+Dark
+System
+
+Dark mode must be intentionally designed.
+
+============================================================
+90. ANIMATIONS
+============================================================
+
+Mobile:
+
+Use subtle animations.
+
+Admin:
+
+Use minimal professional transitions.
+
+Do not sacrifice performance.
+
+============================================================
+91. OBSERVABILITY
+============================================================
+
+Production system should support:
+
+- Error logging
+- API performance
+- Database monitoring
+- Authentication failures
+- Crash reporting
+- Health checks
+
+Create:
+
+GET /api/v1/health
+
+Do not log sensitive financial information unnecessarily.
+
+============================================================
+92. TESTING
+============================================================
+
+Unit tests:
+
+Money calculations
+Balance
+Date calculations
+Daily summary
+Weekly summary
+Monthly summary
+Yearly summary
+Category aggregation
+
+Integration tests:
+
+Authentication
+Transactions
+Categories
+Accounts
+Analytics
+Admin APIs
+
+Security tests:
+
+User A cannot access User B
+User A cannot modify User B
+User A cannot delete User B
+Normal user cannot access admin APIs
+Admin without permission cannot access restricted financial data
+Admin cannot escalate role
+Invalid authentication rejected
+Invalid input rejected
+
+E2E tests:
+
+Registration
+Login
+Google auth
+Add expense
+Add income
+Transaction history
+Calendar
+Analytics
+Admin login
+Admin user management
+Admin authorization
+
+============================================================
+93. CRITICAL SECURITY TESTS
+============================================================
+
+Test horizontal privilege escalation:
+
+User A tries:
+
+GET /api/v1/transactions/B_TRANSACTION_ID
+
+Must fail.
+
+User A tries:
+
+PATCH /api/v1/transactions/B_TRANSACTION_ID
+
+Must fail.
+
+User A tries:
+
+DELETE /api/v1/transactions/B_TRANSACTION_ID
+
+Must fail.
+
+Test vertical privilege escalation:
+
+Normal user tries:
+
+GET /api/v1/admin/users
+
+Must fail.
+
+Support admin tries a SUPER_ADMIN endpoint.
+
+Must fail.
+
+Admin tries to change their own role.
+
+Must fail unless explicitly authorized through proper privileged workflow.
+
+============================================================
+94. ADMIN AUDIT TESTS
+============================================================
+
+When an admin:
+
+Views sensitive financial information
+Changes user status
+Changes roles
+Modifies system categories
+Changes system settings
+
+An audit event must be created.
+
+============================================================
+95. DATE TESTING
+============================================================
+
+Test:
+
+January
+February
+Leap years
+Non-leap years
+28 days
+29 days
+30 days
+31 days
+Year boundaries
+Week boundaries
+Timezone boundaries
+Sunday/Monday week start
+Late-night transactions
+
+============================================================
+96. FINANCIAL TESTING
+============================================================
+
+Example:
+
+Income:
+100000
+
+Expense:
+25000
+
+Balance:
+75000
+
+Multiple expenses:
+
+500
+1200
+1500
+
+Total:
+3200
+
+Also test:
+
+- Multiple incomes
+- Same-day income and expenses
+- Zero transactions
+- Decimal values
+- Large amounts
+- Duplicate submissions
+- Network retry
+- Multiple accounts
+- Multiple currencies
+
+============================================================
+97. ADMIN TESTING
+============================================================
+
+Verify:
+
+- Admin login
+- Role detection
+- Permission detection
+- User listing
+- Pagination
+- Search
+- User details
+- User suspension
+- User restoration
+- Category management
+- Analytics
+- Audit logs
+- Unauthorized access
+- Permission restrictions
+
+============================================================
+98. MOBILE STARTUP
+============================================================
+
+On app launch:
+
+1. Initialize secure storage.
+2. Check session.
+3. Restore authentication.
+4. Load user profile.
+5. Load preferences.
+6. Determine onboarding status.
+7. Navigate.
+
+Unauthenticated:
+
+Auth screens.
+
+New user:
+
+Onboarding.
+
+Existing user:
+
+Dashboard.
+
+============================================================
+99. ADMIN STARTUP
+============================================================
+
+When visiting /admin:
+
+1. Check authentication.
+2. Check admin role.
+3. Load permissions.
+4. If unauthorized:
+   Redirect to appropriate page.
+5. Load dashboard.
+
+But remember:
+
+Frontend route protection is UX.
+
+Backend authorization is security.
+
+Both are required.
+
+============================================================
+100. ADMIN ROUTE PROTECTION
+============================================================
+
+Protect:
+
+/admin/*
+ 
+using Next.js middleware/layout where appropriate.
+
+However, NEVER rely solely on middleware.
+
+Every admin API endpoint must perform its own authorization.
+
+============================================================
+101. API ROUTE PROTECTION
+============================================================
+
+Example:
+
+/api/v1/admin/users
+
+Flow:
+
+Request
+↓
+Authenticate
+↓
+Identify admin
+↓
+Check active status
+↓
+Check role
+↓
+Check permission
+↓
+Validate request
+↓
+Service
+↓
+Repository
+↓
+MongoDB
+
+============================================================
+102. ADMIN SUPPORT ACCESS
+============================================================
+
+If support personnel need to inspect a user's account:
+
+Use controlled access.
+
+Example:
+
+Support clicks:
+
+"View Account"
+
+Backend verifies:
+
+support.accounts.read
+
+Then creates an audit event.
+
+Do not give support permanent unrestricted access to all financial information.
+
+============================================================
+103. ADMIN DATA MASKING
+============================================================
+
+Where appropriate, mask sensitive information.
+
+For example:
+
+Email:
+
+ta***@example.com
+
+unless full email access is authorized.
+
+Avoid exposing unnecessary sensitive information.
+
+============================================================
+104. ADMIN BULK ACTIONS
+============================================================
+
+If bulk actions are introduced:
+
+- Require confirmation
+- Validate permissions
+- Limit batch size
+- Audit the action
+- Handle partial failures safely
+
+Do not allow unlimited bulk database operations from UI.
+
+============================================================
+105. ADMIN SEARCH
+============================================================
+
+Use server-side search.
+
+Support:
+
+User search
+Email
+User ID
+Status
+Role
+
+Transaction search where permitted.
+
+Do not load all users into browser memory.
+
+============================================================
+106. PAGINATION
+============================================================
+
+Use pagination everywhere appropriate.
+
+Users:
+20–50 per page
+
+Transactions:
+Cursor-based where appropriate
+
+Audit logs:
+Paginated
+
+Do not return unlimited records.
+
+============================================================
+107. BACKEND AGGREGATIONS
+============================================================
+
+Use MongoDB aggregation pipelines for:
+
+User statistics
+Transaction statistics
+Category totals
+Daily totals
+Weekly totals
+Monthly totals
+Yearly totals
+Admin platform analytics
+
+Do not pull millions of records into Node.js.
+
+============================================================
+108. CACHING
+============================================================
+
+Use TanStack Query on frontend.
+
+Backend caching only when justified.
+
+Do not introduce Redis automatically.
+
+Measure first.
+
+============================================================
+109. PRODUCT DESIGN
+============================================================
+
+Mobile design:
+
+Modern
+Clean
+Premium
+Friendly
+Fast
+Trustworthy
+Calm
+
+Admin design:
+
+Professional
+Dense but readable
+Operational
+Data-focused
+Consistent
+
+Avoid:
+
+- Generic AI dashboard
+- Excessive gradients
+- Excessive cards
+- Random colors
+- Tiny text
+- Huge headings
+- Excessive rounded containers
+- Unnecessary animations
+
+============================================================
+110. MOBILE-FIRST
+============================================================
+
+Design for:
+
+- Small Android phones
+- Large Android phones
+- iPhones
+- Notches
+- Dynamic Island
+- Safe areas
+- Android navigation
+
+Do not assume fixed screen dimensions.
+
+============================================================
+111. ADMIN RESPONSIVENESS
+============================================================
+
+Admin is primarily desktop.
+
+Still support:
+
+- Tablet
+- Smaller laptop
+- Responsive browser
+
+Do not force mobile-style UI onto desktop admin.
+
+============================================================
+112. APP STORE READINESS
+============================================================
+
+Prepare for:
+
+Google Play
+Apple App Store
+
+Consider:
+
+- App icon
+- Splash screen
+- Bundle identifier
+- Package name
+- Privacy policy
+- Terms
+- Account deletion
+- Permissions
+- OAuth
+- Production API
+- Crash handling
+- Versioning
+
+============================================================
+113. DEPLOYMENT
+============================================================
+
+Recommended:
+
+Mobile:
+Expo / EAS
+
+Admin:
+Vercel
+
+API:
+Vercel / Next.js
+
+Database:
+MongoDB Atlas
+
+The architecture should be deployable without dedicated infrastructure.
+
+============================================================
+114. ENVIRONMENT SETUP
+============================================================
+
+Separate:
+
+Development
+Staging
+Production
+
+Example:
+
+DATABASE_URL
+AUTH_SECRET
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+API_BASE_URL
+APP_ENV
+
+Never commit secrets.
+
+============================================================
+115. SCALABILITY
+============================================================
+
+Design for:
+
+10 users
+100 users
+1,000 users
+10,000 users
+100,000+ users
+
+Use:
+
+- Stateless APIs
+- MongoDB indexes
+- Pagination
+- Aggregation
+- Modular architecture
+- Caching where justified
+- Rate limiting
+- Secure authentication
+
+Do not prematurely introduce microservices.
+
+============================================================
+116. MODULAR MONOLITH
+============================================================
+
+Backend modules:
+
+auth
+users
+transactions
+categories
+accounts
+analytics
+admin
+
+Future:
+
+budgets
+savings
+notifications
+subscriptions
+family
+reports
+
+Keep modules independent.
+
+Avoid circular dependencies.
+
+============================================================
+117. FUTURE FEATURES
+============================================================
+
+Architecture should support:
+
+- Budgets
+- Savings goals
+- Recurring transactions
+- Bill reminders
+- Spending alerts
+- Multiple currencies
+- Currency conversion
+- Bank integrations
+- Open banking
+- CSV import
+- CSV export
+- PDF reports
+- Cloud backup
+- Notifications
+- Biometric lock
+- Family/shared accounts
+- Shared expenses
+- Subscription plans
+- Premium features
+- Web user application
+- AI financial insights
+
+Do NOT prematurely implement these.
+
+============================================================
+118. FAMILY / SHARED FINANCE
+============================================================
+
+The application is NOT family-only.
+
+MVP:
+
+One user owns private data.
+
+Future:
+
+Family
+    ↓
+Members
+    ↓
+Shared Accounts
+    ↓
+Shared Transactions
+    ↓
+Shared Budgets
+
+Sharing must always be explicit.
+
+Do not automatically expose user data to family members.
+
+============================================================
+119. FUTURE PUBLIC WEB APP
+============================================================
+
+Although the initial web application is primarily the Admin Panel, architect the Next.js project so a future public web application can be added.
+
+Potential:
+
+/app
+/admin
+
+Example:
+
+Public User Web App:
+example.com/app
+
+Admin:
+example.com/admin
+
+Both can consume:
+
+/api/v1/...
+
+Do not mix admin-specific components with future customer-facing web components.
+
+============================================================
+120. API CONTRACT
+============================================================
+
+Create clear API documentation.
+
+Document:
+
+Endpoint
+Method
+Authentication
+Permissions
+Request
+Response
+Validation
+Errors
+Pagination
+Filtering
+
+Example:
+
+POST /api/v1/transactions
+
+Auth:
+Required
+
+Role:
+USER
+
+Request:
+
+{
+    amount,
+    type,
+    categoryId,
+    accountId,
+    date,
+    currency,
+    title,
+    description
+}
+
+Response:
+
+{
+    success: true,
+    data: transaction,
+    message: "Transaction created successfully"
+}
+
+============================================================
+121. SHARED TYPES
+============================================================
+
+Where appropriate, share types between:
+
+Mobile
+Admin
+Backend
+
+Example:
+
+Transaction
+Category
+Account
+UserSummary
+FinancialSummary
+AnalyticsData
+
+But do NOT share:
+
+- Server secrets
+- Database models
+- Server-only utilities
+- Authentication internals
+
+The mobile app should receive DTOs, not raw MongoDB documents.
+
+============================================================
+122. DTO ARCHITECTURE
+============================================================
+
+Use DTOs.
+
+Backend database model:
+
+Internal MongoDB representation.
+
+API:
+
+Safe DTO.
+
+Example:
+
+UserDTO:
+
+{
+    id,
+    name,
+    email,
+    avatar,
+    preferredCurrency,
+    locale
+}
+
+Never accidentally serialize:
+
+passwordHash
+internal secrets
+private tokens
+sensitive server metadata
+
+============================================================
+123. BACKEND AUTHORITY
+============================================================
+
+Backend is authoritative for:
+
+- User identity
+- Permissions
+- Ownership
+- Financial calculations
+- Category ownership
+- Account ownership
+- Transaction validity
+- Currency validity
+- Admin permissions
+
+Frontend is responsible for:
+
+- UX
+- Form validation
+- Display
+- User interaction
+- Caching
+
+============================================================
+124. NO DUPLICATE BUSINESS LOGIC
+============================================================
+
+This is extremely important.
+
+Do NOT calculate:
+
+Balance A in mobile
+
+and:
+
+Balance B in admin
+
+using separate formulas.
+
+Create shared/backend financial services.
+
+For example:
+
+calculateBalance()
+
+is authoritative.
+
+Mobile receives:
+
+balance
+
+Admin receives:
+
+balance
+
+Both come from the same domain logic.
+
+============================================================
+125. API AND ADMIN DEPLOYMENT MODEL
+============================================================
+
+Preferred:
+
+One Next.js application:
+
+apps/web
+
+It contains:
+
+Admin UI
++
+API
+
+Deploy to Vercel.
+
+Mobile:
+
+apps/mobile
+
+Build using Expo/EAS.
+
+Database:
+
+MongoDB Atlas.
+
+This keeps initial infrastructure simple.
+
+============================================================
+126. DO NOT CREATE A SECOND BACKEND
+============================================================
+
+Unless a very strong technical reason emerges:
+
+DO NOT create:
+
+Express server
++
+Next.js API
+
+simultaneously.
+
+Next.js backend is enough for this architecture.
+
+If later scaling requires extraction:
+
+The modular service boundaries should make extraction possible.
+
+============================================================
+127. DEVELOPMENT WORKFLOW
+============================================================
+
+Before coding:
+
+1. Inspect repository.
+2. Understand existing structure.
+3. Identify package manager.
+4. Check Node version.
+5. Check TypeScript.
+6. Check linting.
+7. Check formatting.
+8. Check environment configuration.
+9. Check existing API patterns.
+10. Check authentication.
+11. Check database setup.
+12. Check reusable components.
+
+Do not destroy good existing architecture.
+
+Extend it.
+
+============================================================
+128. IMPLEMENTATION PHASES
+============================================================
+
+PHASE 1:
+
+Architecture
+Monorepo
+Next.js Web
+React Native Expo
+Shared packages
+MongoDB
+Environment setup
+Authentication foundation
+
+PHASE 2:
+
+User model
+RBAC
+Admin authentication
+Admin authorization
+Audit foundation
+
+PHASE 3:
+
+Categories
+Accounts
+Transactions
+Add Income
+Add Expense
+
+PHASE 4:
+
+Mobile Dashboard
+Transaction History
+Day/Week/Month/Year
+Calendar
+
+PHASE 5:
+
+Analytics
+Charts
+Search
+Filters
+
+PHASE 6:
+
+Admin Dashboard
+Users
+Categories
+Analytics
+Audit Logs
+System Configuration
+
+PHASE 7:
+
+Security hardening
+Performance
+Accessibility
+Dark mode
+Error handling
+Offline resilience
+
+PHASE 8:
+
+Testing
+CI/CD
+Production deployment
+Vercel
+MongoDB Atlas
+Expo/EAS
+Store readiness
+
+============================================================
+129. CI/CD
+============================================================
+
+Prepare for:
+
+Lint
+Typecheck
+Unit Tests
+Integration Tests
+Build
+
+Pull requests should ideally run:
+
+npm/pnpm install
+lint
+typecheck
+test
+build
+
+Do not merge broken builds.
+
+============================================================
+130. CODE QUALITY
+============================================================
+
+Use:
+
+Strong TypeScript
+SOLID where useful
+DRY
+KISS
+Separation of concerns
+
+Avoid:
+
+any
+giant components
+giant services
+giant controllers
+duplicated logic
+hard-coded configuration
+magic numbers
+magic strings
+
+============================================================
+131. ADMIN UI QUALITY
+============================================================
+
+Every admin page must handle:
+
+Loading
+Success
+Empty
+Error
+Unauthorized
+
+Tables should have:
+
+- Pagination
+- Search
+- Filtering
+- Sorting
+- Loading state
+- Empty state
+- Error state
+
+Forms should have:
+
+- Validation
+- Submit state
+- Error feedback
+- Success feedback
+- Confirmation for destructive actions
+
+============================================================
+132. MOBILE UI QUALITY
+============================================================
+
+Every mobile screen must handle:
+
+Loading
+Success
+Empty
+Error
+Offline
+
+Forms must handle:
+
+- Keyboard
+- Validation
+- Submit state
+- Keyboard dismissal
+- Safe area
+- Error feedback
+
+============================================================
+133. SECURITY CHECKLIST
+============================================================
+
+Before production verify:
+
+[ ] Passwords hashed
+[ ] No secrets in client
+[ ] Secure session
+[ ] Google OAuth verified
+[ ] User isolation
+[ ] Admin RBAC
+[ ] Permission checks
+[ ] Input validation
+[ ] Rate limiting
+[ ] Secure headers
+[ ] Proper CORS
+[ ] MongoDB secured
+[ ] Audit logs
+[ ] No sensitive logs
+[ ] Account deletion
+[ ] Password reset secured
+[ ] Idempotency
+[ ] API pagination
+[ ] Query protection
+
+============================================================
+134. FINANCIAL CHECKLIST
+============================================================
+
+[ ] Money representation is accurate
+[ ] Balance calculations centralized
+[ ] Multiple transactions supported
+[ ] Same category multiple times supported
+[ ] Income supported
+[ ] Expense supported
+[ ] Daily summaries correct
+[ ] Weekly summaries correct
+[ ] Monthly summaries correct
+[ ] Yearly summaries correct
+[ ] Timezones correct
+[ ] Currency handling correct
+[ ] Duplicate submissions prevented
+[ ] Backend authoritative
+
+============================================================
+135. ADMIN CHECKLIST
+============================================================
+
+[ ] Admin login
+[ ] RBAC
+[ ] Permissions
+[ ] User management
+[ ] User search
+[ ] User pagination
+[ ] User suspension
+[ ] User restoration
+[ ] Category management
+[ ] Analytics
+[ ] Audit logs
+[ ] Sensitive-data restrictions
+[ ] Role management
+[ ] System configuration
+[ ] Unauthorized access blocked
+
+============================================================
+136. MVP SUCCESS CRITERIA
+============================================================
+
+A new user can:
+
+1. Install app
+2. Register
+3. Login
+4. Continue with Google
+5. Select currency
+6. See default categories
+7. Add income
+8. Add expense
+9. Add multiple expenses same day
+10. Add multiple expenses same category
+11. View balance
+12. View transactions
+13. View daily data
+14. View weekly data
+15. View monthly data
+16. View yearly data
+17. View calendar
+18. View analytics
+19. Search transactions
+20. Filter transactions
+21. Edit transaction
+22. Delete/archive transaction
+23. Create custom category
+24. Manage accounts
+25. Close app
+26. Reopen app
+27. Login on another device
+28. See synchronized data
+29. Never see another user's private data
+
+An authorized admin can:
+
+1. Login securely
+2. Access admin dashboard
+3. View aggregated platform analytics
+4. Search users
+5. View authorized user information
+6. Suspend/restore users
+7. Manage system categories
+8. View permitted analytics
+9. View audit logs
+10. Manage authorized settings
+
+A normal user:
+
+MUST NOT:
+
+- Access /admin
+- Call admin APIs successfully
+- See other users
+- Modify roles
+- Modify permissions
+- Access private admin data
+
+============================================================
+137. FINAL ARCHITECTURE
+============================================================
+
+Final architecture should look approximately like:
+
+                        ┌─────────────────────┐
+                        │     iOS / Android   │
+                        │                     │
+                        │ React Native + Expo │
+                        └──────────┬──────────┘
+                                   │
+                                   │ HTTPS
+                                   ▼
+                    ┌────────────────────────────┐
+                    │        NEXT.JS APP         │
+                    │                            │
+                    │  ┌──────────────────────┐  │
+                    │  │    ADMIN WEB UI      │  │
+                    │  │      /admin/*        │  │
+                    │  └──────────────────────┘  │
+                    │                            │
+                    │  ┌──────────────────────┐  │
+                    │  │       REST API       │  │
+                    │  │      /api/v1/*       │  │
+                    │  └──────────┬───────────┘  │
+                    │             │              │
+                    │  ┌──────────▼───────────┐  │
+                    │  │ Authentication        │  │
+                    │  │ Authorization / RBAC  │  │
+                    │  │ Validation            │  │
+                    │  │ Business Services     │  │
+                    │  │ Analytics              │  │
+                    │  └──────────┬───────────┘  │
+                    └─────────────┼──────────────┘
+                                  │
+                                  ▼
+                       ┌────────────────────┐
+                       │    MongoDB Atlas   │
+                       │                    │
+                       │ Users              │
+                       │ Categories         │
+                       │ Accounts           │
+                       │ Transactions       │
+                       │ Audit Logs         │
+                       │ Future Domains     │
+                       └────────────────────┘
+
+
+============================================================
+138. MOST IMPORTANT ARCHITECTURAL RULES
+============================================================
+
+1. ONE BACKEND.
+
+2. ONE AUTHORITATIVE API.
+
+3. MOBILE AND ADMIN USE THE SAME API.
+
+4. ADMIN PANEL MUST NOT DIRECTLY ACCESS MONGODB.
+
+5. MOBILE MUST NOT DIRECTLY ACCESS MONGODB.
+
+6. BUSINESS LOGIC BELONGS IN BACKEND SERVICES.
+
+7. DO NOT DUPLICATE BUSINESS LOGIC BETWEEN MOBILE AND ADMIN.
+
+8. BACKEND IS THE SOURCE OF TRUTH.
+
+9. EVERY USER-OWNED RESOURCE MUST BE USER-SCOPED.
+
+10. NEVER TRUST USER ID FROM CLIENT REQUESTS.
+
+11. ADMIN ACCESS MUST BE RBAC/PERMISSION BASED.
+
+12. FRONTEND ADMIN PROTECTION IS NOT SECURITY.
+
+13. EVERY ADMIN API MUST ENFORCE AUTHORIZATION SERVER-SIDE.
+
+14. ADMIN FINANCIAL-DATA ACCESS MUST BE LIMITED AND AUDITED.
+
+15. NORMAL USERS MUST NEVER ACCESS ADMIN APIs.
+
+16. ADMINS MUST NOT AUTOMATICALLY HAVE UNRESTRICTED ACCESS TO PRIVATE FINANCIAL DATA.
+
+17. NEVER STORE PLAINTEXT PASSWORDS.
+
+18. NEVER EXPOSE SECRETS TO MOBILE OR BROWSER.
+
+19. NEVER USE FLOATING-POINT MONEY CALCULATIONS CARELESSLY.
+
+20. USE IDEMPOTENCY FOR FINANCIAL MUTATIONS WHERE APPROPRIATE.
+
+21. USE PAGINATION FOR LARGE DATASETS.
+
+22. USE MONGODB AGGREGATION FOR LARGE ANALYTICS.
+
+23. DO NOT HARD-CODE CURRENCY.
+
+24. DO NOT HARD-CODE TIMEZONE.
+
+25. DO NOT HARD-CODE DATE FORMATS.
+
+26. DESIGN FOR GLOBAL USERS.
+
+27. START WITH A MODULAR MONOLITH.
+
+28. DO NOT PREMATURELY INTRODUCE MICROSERVICES.
+
+29. KEEP MOBILE UI AND ADMIN UI SEPARATE.
+
+30. KEEP DOMAIN/BACKEND LOGIC SHARED.
+
+============================================================
+139. FINAL EXPECTATION
+============================================================
+
+Build this as a real production product.
+
+The mobile application is the customer-facing personal finance experience.
+
+The Next.js application is both:
+
+1. The backend/API
+2. The secure administration portal
+
+The API is the bridge between the mobile application, admin panel, and database.
+
+The architecture should make it possible to add future clients without rewriting the backend.
+
+For example:
+
+React Native Mobile
+        ↓
+      API
+        ↑
+Next.js Admin
+
+Future:
+
+Web User App
+        ↓
+      API
+
+Future:
+
+Partner integrations
+        ↓
+      API
+
+Future:
+
+Public API
+        ↓
+      API
+
+The core domain remains centralized.
+
+The application must be:
+
+- Secure
+- Scalable
+- Fast
+- Maintainable
+- Testable
+- Financially accurate
+- Globally usable
+- Privacy-conscious
+- Mobile-first
+- Admin-operational
+- Production-ready
+
+Do not build a toy expense tracker.
+
+Build the foundation of a serious global personal finance platform.
+
+Before writing code, inspect the repository and existing architecture.
+
+Understand existing conventions before introducing new patterns.
+
+Do not unnecessarily rewrite working code.
+
+Do not create fake API implementations.
+
+Do not hard-code mock data as a replacement for real backend functionality.
+
+Do not leave TODO placeholders for core functionality.
+
+Implement incrementally.
+
+After every major phase:
+
+1. Typecheck
+2. Lint
+3. Test
+4. Build
+5. Review security
+6. Review authorization
+7. Review database queries
+8. Review mobile UX
+9. Review admin UX
+10. Fix all issues before moving forward.
+
+The final result should be something that can start with a small family user base today and realistically grow into a public application available to users around the world tomorrow.
+```
