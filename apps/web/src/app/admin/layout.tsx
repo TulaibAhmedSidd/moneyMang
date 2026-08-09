@@ -14,9 +14,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     const userStr = localStorage.getItem("user");
+    const allowUnauthenticated = pathname === "/admin/login";
 
     if (!token || !userStr) {
-      router.replace("/");
+      if (allowUnauthenticated) {
+        setLoading(false);
+        return;
+      }
+      router.replace("/admin/login");
       return;
     }
 
@@ -26,15 +31,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         alert("Access Denied: Administrative privileges required.");
         router.replace("/");
       } else {
+        if (pathname === "/admin/login") {
+          router.replace("/admin");
+          return;
+        }
         setAdminUser(user);
         setAuthorized(true);
       }
     } catch {
-      router.replace("/");
+      if (allowUnauthenticated) {
+        setLoading(false);
+        return;
+      }
+      router.replace("/admin/login");
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [pathname, router]);
 
   if (loading) {
     return (
