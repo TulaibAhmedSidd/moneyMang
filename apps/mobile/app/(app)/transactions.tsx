@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator
 import { useAuth, useTheme } from "../_layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../src/lib/api";
-import { formatMoney } from "@money/shared";
+import { formatMoney } from "../../src/shared";
 import { Ionicons } from "@expo/vector-icons";
 
 type TimeTab = "day" | "week" | "month" | "year";

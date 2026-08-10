@@ -28,6 +28,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     try {
       const user = JSON.parse(userStr);
       if (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") {
+        if (allowUnauthenticated) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("token");
+          setLoading(false);
+          return;
+        }
         alert("Access Denied: Administrative privileges required.");
         router.replace("/");
       } else {

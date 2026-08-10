@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useAuth, useTheme } from "../_layout";
 import api from "../../src/lib/api";
-import { SUPPORTED_CURRENCIES } from "@money/shared";
+import { SUPPORTED_CURRENCIES } from "../../src/shared";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Settings() {

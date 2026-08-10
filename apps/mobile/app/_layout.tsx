@@ -5,7 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import api from "../src/lib/api";
-import { themeColors } from "@money/shared";
+import { themeColors } from "../src/shared";
 
 const queryClient = new QueryClient();
 const TOKEN_KEY = "money_session_token";

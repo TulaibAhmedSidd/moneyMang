@@ -4,7 +4,7 @@ import { useAuth } from "../_layout";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../src/lib/api";
-import { toMinorUnits } from "@money/shared";
+import { toMinorUnits } from "../../src/shared";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function AddTransaction() {

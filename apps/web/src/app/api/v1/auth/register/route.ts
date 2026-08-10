@@ -3,7 +3,7 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/db";
 import User from "@/models/User";
-import { registerSchema } from "@money/shared";
+import { registerSchema } from "@/shared";
 import { sendVerificationEmail } from "@/services/email";
 import { isRateLimited } from "@/lib/rateLimit";
 

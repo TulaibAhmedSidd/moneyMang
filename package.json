@@ -2,17 +2,12 @@
   "name": "money-platform",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "dev:web": "npm run dev -w apps/web",
-    "dev:mobile": "npm run start -w apps/mobile",
-    "build:web": "npm run build -w packages/shared && npm run build -w packages/api-client && npm run build -w apps/web",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "dev:web": "npm run dev --prefix apps/web",
+    "dev:mobile": "npm run start --prefix apps/mobile",
+    "build:web": "npm run build --prefix apps/web",
+    "typecheck:web": "npm run typecheck --prefix apps/web",
+    "typecheck:mobile": "npm run typecheck --prefix apps/mobile"
   },
   "dependencies": {
     "next": "16.3.0"

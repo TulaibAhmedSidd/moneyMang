@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, ScrollView, ActivityIndicator, Dimensions } fro
 import { useAuth, useTheme } from "../_layout";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../src/lib/api";
-import { formatMoney } from "@money/shared";
+import { formatMoney } from "../../src/shared";
 import { Ionicons } from "@expo/vector-icons";
 import DonutChart from "../../src/components/DonutChart";
 import TrendBarChart from "../../src/components/TrendBarChart";

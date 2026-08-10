@@ -1,4 +1,4 @@
-import { ApiClient } from "@money/api-client";
+import { ApiClient } from "../api-client/client";
 import Constants from "expo-constants";
 
 // 1. Prefer explicit env variable (set in .env or EAS secrets)

@@ -1,4 +1,4 @@
-import { LoginInput, RegisterInput, TransactionInput } from "@money/shared";
+import { LoginInput, RegisterInput, TransactionInput } from "../shared";
 
 export interface ApiResponse<T = any> {
   success: boolean;

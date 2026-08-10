@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
 import { useAuth } from "./_layout";
 import api from "../src/lib/api";
-import { SUPPORTED_CURRENCIES } from "@money/shared";
+import { SUPPORTED_CURRENCIES } from "../src/shared";
 
 export default function Onboarding() {
   const { updateUser, signOut } = useAuth();

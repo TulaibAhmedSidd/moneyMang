@@ -4,7 +4,7 @@ import Transaction from "@/models/Transaction";
 import Account from "@/models/Account";
 import Category from "@/models/Category";
 import { verifyAuth, AuthError } from "@/lib/auth";
-import { transactionSchema } from "@money/shared";
+import { transactionSchema } from "@/shared";
 import { sanitizeObject } from "@/utils/sanitize";
 
 interface RouteParams {

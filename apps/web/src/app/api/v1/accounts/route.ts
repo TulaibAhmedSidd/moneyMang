@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import Account from "@/models/Account";
 import { verifyAuth, AuthError } from "@/lib/auth";
-import { SUPPORTED_CURRENCIES } from "@money/shared";
+import { SUPPORTED_CURRENCIES } from "@/shared";
 import { calculateUserBalances } from "@/services/balance";
 
 export async function GET(request: Request) {

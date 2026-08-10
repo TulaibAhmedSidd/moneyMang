@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { connectToDatabase } from "@/lib/db";
 import User from "@/models/User";
-import { loginSchema } from "@money/shared";
+import { loginSchema } from "@/shared";
 import { isRateLimited } from "@/lib/rateLimit";
 
 const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret";

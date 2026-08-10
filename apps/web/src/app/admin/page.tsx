@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { formatMoney } from "@money/shared";
+import { formatMoney } from "@/shared";
 
 interface AdminStats {
   totalUsers: number;
