@@ -35,6 +35,10 @@ export default function PortalDashboard() {
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Offline & Synchronization states
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
   // Layout settings (Expenses/Income segment & Timeframe filters)
   const [activeType, setActiveType] = useState<"expense" | "income">("expense");
   const [timeframe, setTimeframe] = useState<Timeframe>("day");
@@ -137,8 +141,80 @@ export default function PortalDashboard() {
     setFilterDate(newDate);
   };
 
-  const fetchData = async () => {
-    setIsLoading(true);
+  // Load Cached Data instantly for smooth PWA usability
+  const loadCachedData = () => {
+    try {
+      const cachedAcc = localStorage.getItem("cached_accounts");
+      const cachedCat = localStorage.getItem("cached_categories");
+      const cachedTx = localStorage.getItem("cached_transactions");
+      const cachedUser = localStorage.getItem("user");
+
+      if (cachedUser) setUser(JSON.parse(cachedUser));
+      if (cachedAcc) setAccounts(JSON.parse(cachedAcc));
+      if (cachedCat) setCategories(JSON.parse(cachedCat));
+      if (cachedTx) setTransactions(JSON.parse(cachedTx));
+      
+      if (cachedAcc || cachedTx) {
+        setIsLoading(false); // disable loader instantly
+      }
+    } catch (e) {
+      console.error("Local storage load failed", e);
+    }
+  };
+
+  // Sync Offline Queue to Backend
+  const syncPendingTransactions = async () => {
+    const pendingQueueStr = localStorage.getItem("pending_sync_transactions");
+    if (!pendingQueueStr) return;
+
+    try {
+      const queue = JSON.parse(pendingQueueStr);
+      if (queue.length === 0) return;
+
+      setIsSyncing(true);
+      setSyncStatus(`🔄 Syncing ${queue.length} offline transactions...`);
+
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      const remaining: any[] = [];
+
+      for (const tx of queue) {
+        try {
+          const res = await fetch("/api/v1/transactions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(tx),
+          });
+          const json = await res.json();
+          if (!json.success) {
+            remaining.push(tx);
+          }
+        } catch {
+          remaining.push(tx);
+        }
+      }
+
+      if (remaining.length === 0) {
+        localStorage.removeItem("pending_sync_transactions");
+        setSyncStatus("✅ Offline transactions synced!");
+        setTimeout(() => setSyncStatus(null), 3000);
+      } else {
+        localStorage.setItem("pending_sync_transactions", JSON.stringify(remaining));
+        setSyncStatus(`⚠️ Sync incomplete. ${remaining.length} left.`);
+      }
+      
+      fetchData(false);
+    } catch (e) {
+      console.error("Sync failed", e);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const fetchData = async (showLoader = false) => {
+    if (showLoader) setIsLoading(true);
     setError(null);
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -155,31 +231,53 @@ export default function PortalDashboard() {
       const accJson = await accRes.json();
       const accountsList = accJson.data || [];
       setAccounts(accountsList);
+      localStorage.setItem("cached_accounts", JSON.stringify(accountsList));
 
       // Fetch Categories
       const catRes = await fetch("/api/v1/categories", { headers });
       const catJson = await catRes.json();
-      setCategories(catJson.data || []);
+      const categoriesList = catJson.data || [];
+      setCategories(categoriesList);
+      localStorage.setItem("cached_categories", JSON.stringify(categoriesList));
 
       // Fetch Transactions with Date filter
       const startStr = dateBounds.start.toISOString();
       const endStr = dateBounds.end.toISOString();
       const txRes = await fetch(`/api/v1/transactions?limit=100&startDate=${startStr}&endDate=${endStr}`, { headers });
       const txJson = await txRes.json();
-      setTransactions(txJson.data?.transactions || []);
+      const transactionsList = txJson.data?.transactions || [];
+      setTransactions(transactionsList);
+      localStorage.setItem("cached_transactions", JSON.stringify(transactionsList));
       
       if (accountsList.length > 0) {
         setTxAccount(accountsList[0]._id);
       }
     } catch (err: any) {
-      setError(err?.message || "Failed to load portal metrics");
+      if (!navigator.onLine) {
+        console.log("Running offline mode.");
+      } else {
+        setError(err?.message || "Failed to load portal metrics");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    loadCachedData();
+    fetchData(false);
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", syncPendingTransactions);
+      
+      if (navigator.onLine) {
+        syncPendingTransactions();
+      }
+      
+      return () => {
+        window.removeEventListener("online", syncPendingTransactions);
+      };
+    }
   }, [timeframe, filterDate]);
 
   // Aggregate total accounts balances
@@ -278,13 +376,71 @@ export default function PortalDashboard() {
       return;
     }
 
+    const amountVal = parseFloat(txAmount);
+    const minorAmount = Math.round(amountVal * 100);
+
+    const selectedCat = categories.find((c) => c._id === txCategory);
+    const selectedAcc = accounts.find((a) => a._id === txAccount);
+
+    const tempTx = {
+      _id: "temp_" + Date.now(),
+      amount: minorAmount,
+      type: activeType,
+      title: txTitle,
+      accountId: selectedAcc ? { _id: selectedAcc._id, name: selectedAcc.name } : txAccount,
+      categoryId: selectedCat ? { _id: selectedCat._id, name: selectedCat.name, icon: selectedCat.icon } : txCategory,
+      description: txDescription,
+      date: new Date(txDate).toISOString(),
+      currency: user?.preferredCurrency || "USD",
+      isPendingSync: true,
+    };
+
     setIsSubmitLoading(true);
+
+    const saveOffline = () => {
+      try {
+        const pendingQueue = JSON.parse(localStorage.getItem("pending_sync_transactions") || "[]");
+        pendingQueue.push({
+          amount: minorAmount,
+          type: activeType,
+          title: txTitle,
+          accountId: txAccount,
+          categoryId: txCategory,
+          description: txDescription,
+          date: new Date(txDate).toISOString(),
+          currency: user?.preferredCurrency || "USD",
+        });
+        localStorage.setItem("pending_sync_transactions", JSON.stringify(pendingQueue));
+
+        // Optimistically update lists and balance UI instantly!
+        setTransactions((prev) => [tempTx, ...prev]);
+        setAccounts((prevAccounts) =>
+          prevAccounts.map((acc) => {
+            if (acc._id === txAccount) {
+              const diff = activeType === "income" ? minorAmount : -minorAmount;
+              return { ...acc, balance: (acc.balance ?? 0) + diff };
+            }
+            return acc;
+          })
+        );
+
+        setIsModalOpen(false);
+        setSyncStatus("📝 Saved offline! Will sync automatically when online.");
+        setTimeout(() => setSyncStatus(null), 5000);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSubmitLoading(false);
+      }
+    };
+
+    if (!navigator.onLine) {
+      saveOffline();
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      
-      const amountVal = parseFloat(txAmount);
-      const minorAmount = Math.round(amountVal * 100);
-
       const response = await fetch("/api/v1/transactions", {
         method: "POST",
         headers: {
@@ -310,9 +466,10 @@ export default function PortalDashboard() {
       }
 
       setIsModalOpen(false);
-      fetchData(); // Reload stats
-    } catch (err: any) {
-      alert(err.message || "Failed to submit transaction");
+      fetchData(false);
+    } catch (err) {
+      console.log("Connection failed, saving offline.");
+      saveOffline();
     } finally {
       setIsSubmitLoading(false);
     }
@@ -350,6 +507,9 @@ export default function PortalDashboard() {
 
       setIsCatModalOpen(false);
       setCatName("");
+      if (res.data && res.data._id) {
+        setTxCategory(res.data._id);
+      }
       fetchData();
     } catch (err: any) {
       alert(err.message || "Failed to create category");
@@ -414,6 +574,12 @@ export default function PortalDashboard() {
   return (
     <div className="space-y-6 max-w-lg mx-auto bg-zinc-950/40 p-4 sm:p-6 rounded-3xl border border-zinc-900/60 shadow-2xl">
       
+      {syncStatus && (
+        <div className="rounded-2xl bg-blue-500/10 border border-blue-500/20 p-3.5 text-xs text-blue-400 flex items-center justify-center gap-2 animate-pulse text-center font-semibold">
+          <span>{syncStatus}</span>
+        </div>
+      )}
+
       {/* 1. Balance section at top */}
       <div className="text-center py-4 flex flex-col items-center relative">
         <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">BALANCE</span>
@@ -421,26 +587,17 @@ export default function PortalDashboard() {
           {formatMoney(totalBalance, user?.preferredCurrency || "USD")}
         </h2>
         
-        {/* Buttons to initialize wallets or custom categories */}
-        <div className="flex gap-2 mt-4">
-          {accounts.length === 0 && (
+        {/* Buttons to initialize wallets */}
+        {accounts.length === 0 && (
+          <div className="flex gap-2 mt-4">
             <button
               onClick={() => setIsAccModalOpen(true)}
               className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:bg-zinc-800"
             >
               + Create Wallet
             </button>
-          )}
-          <button
-            onClick={() => {
-              setCatType(activeType);
-              setIsCatModalOpen(true);
-            }}
-            className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-slate-350 transition hover:bg-zinc-800 hover:text-white cursor-pointer"
-          >
-            📁 Own Category
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -673,10 +830,25 @@ export default function PortalDashboard() {
                     onChange={(e) => setTxCategory(e.target.value)}
                     className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
                   >
-                    {categories.filter((c) => c.type === activeType).map((c) => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
-                    ))}
+                    {categories.filter((c) => c.type === activeType).map((c) => {
+                      const { icon } = resolveCategory(c);
+                      return (
+                        <option key={c._id} value={c._id}>
+                          {icon} {c.name}
+                        </option>
+                      );
+                    })}
                   </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCatType(activeType);
+                      setIsCatModalOpen(true);
+                    }}
+                    className="mt-1.5 text-[10px] font-bold text-blue-500 hover:text-blue-400 flex items-center gap-1 cursor-pointer"
+                  >
+                    ➕ Create Category
+                  </button>
                 </div>
               </div>
 
