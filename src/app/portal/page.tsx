@@ -190,22 +190,64 @@ export default function PortalDashboard() {
     }
   };
 
-  // Sync Offline Queue to Backend
+  // Sync Offline Queue (Categories & Transactions) to Backend
   const syncPendingTransactions = async () => {
-    const pendingQueueStr = localStorage.getItem("pending_sync_transactions");
-    if (!pendingQueueStr) return;
+    const pendingCatsStr = localStorage.getItem("pending_sync_categories");
+    const pendingTxsStr = localStorage.getItem("pending_sync_transactions");
+
+    const pendingCats = pendingCatsStr ? JSON.parse(pendingCatsStr) : [];
+    const pendingTxs = pendingTxsStr ? JSON.parse(pendingTxsStr) : [];
+
+    if (pendingCats.length === 0 && pendingTxs.length === 0) return;
+
+    setIsSyncing(true);
+    setSyncStatus("Syncing...");
 
     try {
-      const queue = JSON.parse(pendingQueueStr);
-      if (queue.length === 0) return;
-
-      setIsSyncing(true);
-      setSyncStatus(`🔄 Syncing ${queue.length} offline transactions...`);
-
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const remaining: any[] = [];
+      const catIdMap: Record<string, string> = {};
+      const remainingCats: any[] = [];
 
-      for (const tx of queue) {
+      // 1. Sync Categories
+      for (const cat of pendingCats) {
+        try {
+          const res = await fetch("/api/v1/categories", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              name: cat.name,
+              type: cat.type,
+              icon: cat.icon,
+            }),
+          });
+          const json = await res.json();
+          if (json.success && json.data?._id) {
+            catIdMap[cat.tempId] = json.data._id;
+          } else {
+            remainingCats.push(cat);
+          }
+        } catch {
+          remainingCats.push(cat);
+        }
+      }
+
+      if (remainingCats.length === 0) {
+        localStorage.removeItem("pending_sync_categories");
+      } else {
+        localStorage.setItem("pending_sync_categories", JSON.stringify(remainingCats));
+      }
+
+      // 2. Sync Transactions
+      const remainingTxs: any[] = [];
+      for (const tx of pendingTxs) {
+        let catId = tx.categoryId;
+        if (catId.startsWith("temp_cat_") && catIdMap[catId]) {
+          catId = catIdMap[catId];
+        }
+
         try {
           const res = await fetch("/api/v1/transactions", {
             method: "POST",
@@ -213,29 +255,39 @@ export default function PortalDashboard() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(tx),
+            body: JSON.stringify({
+              ...tx,
+              categoryId: catId,
+            }),
           });
           const json = await res.json();
           if (!json.success) {
-            remaining.push(tx);
+            remainingTxs.push(tx);
           }
         } catch {
-          remaining.push(tx);
+          remainingTxs.push(tx);
         }
       }
 
-      if (remaining.length === 0) {
+      if (remainingTxs.length === 0) {
         localStorage.removeItem("pending_sync_transactions");
-        setSyncStatus("✅ Offline transactions synced!");
-        setTimeout(() => setSyncStatus(null), 3000);
       } else {
-        localStorage.setItem("pending_sync_transactions", JSON.stringify(remaining));
-        setSyncStatus(`⚠️ Sync incomplete. ${remaining.length} left.`);
+        localStorage.setItem("pending_sync_transactions", JSON.stringify(remainingTxs));
       }
-      
+
+      const totalRemaining = remainingCats.length + remainingTxs.length;
+      if (totalRemaining === 0) {
+        setSyncStatus("Synced");
+        setTimeout(() => setSyncStatus(null), 2500);
+      } else {
+        setSyncStatus("Sync incomplete");
+        setTimeout(() => setSyncStatus(null), 4000);
+      }
+
       fetchData(false);
     } catch (e) {
       console.error("Sync failed", e);
+      setSyncStatus("Offline");
     } finally {
       setIsSyncing(false);
     }
@@ -423,83 +475,38 @@ export default function PortalDashboard() {
       isPendingSync: true,
     };
 
-    setIsSubmitLoading(true);
+    // Optimistic UI updates instantly!
+    setTransactions((prev) => [tempTx, ...prev]);
+    setAccounts((prevAccounts) =>
+      prevAccounts.map((acc) => {
+        if (acc._id === txAccount) {
+          const diff = activeType === "income" ? minorAmount : -minorAmount;
+          return { ...acc, balance: (acc.balance ?? 0) + diff };
+        }
+        return acc;
+      })
+    );
+    setIsModalOpen(false);
 
-    const saveOffline = () => {
-      try {
-        const pendingQueue = JSON.parse(localStorage.getItem("pending_sync_transactions") || "[]");
-        pendingQueue.push({
-          amount: minorAmount,
-          type: activeType,
-          title: txTitle,
-          accountId: txAccount,
-          categoryId: txCategory,
-          description: txDescription,
-          date: getISODateWithLocalTime(txDate),
-          currency: user?.preferredCurrency || "USD",
-        });
-        localStorage.setItem("pending_sync_transactions", JSON.stringify(pendingQueue));
-
-        // Optimistically update lists and balance UI instantly!
-        setTransactions((prev) => [tempTx, ...prev]);
-        setAccounts((prevAccounts) =>
-          prevAccounts.map((acc) => {
-            if (acc._id === txAccount) {
-              const diff = activeType === "income" ? minorAmount : -minorAmount;
-              return { ...acc, balance: (acc.balance ?? 0) + diff };
-            }
-            return acc;
-          })
-        );
-
-        setIsModalOpen(false);
-        setSyncStatus("📝 Saved offline! Will sync automatically when online.");
-        setTimeout(() => setSyncStatus(null), 5000);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsSubmitLoading(false);
-      }
-    };
-
-    if (!navigator.onLine) {
-      saveOffline();
-      return;
-    }
-
+    // Save transaction to offline queue for background sync
     try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const response = await fetch("/api/v1/transactions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          amount: minorAmount,
-          type: activeType,
-          title: txTitle,
-          accountId: txAccount,
-          categoryId: txCategory,
-          description: txDescription,
-          date: getISODateWithLocalTime(txDate),
-          currency: user?.preferredCurrency || "USD",
-        }),
+      const pendingQueue = JSON.parse(localStorage.getItem("pending_sync_transactions") || "[]");
+      pendingQueue.push({
+        amount: minorAmount,
+        type: activeType,
+        title: txTitle,
+        accountId: txAccount,
+        categoryId: txCategory,
+        description: txDescription,
+        date: getISODateWithLocalTime(txDate),
+        currency: user?.preferredCurrency || "USD",
       });
-
-      const res = await response.json();
-      if (!res.success) {
-        alert(res.message || "Failed to create transaction");
-        return;
-      }
-
-      setIsModalOpen(false);
-      fetchData(false);
+      localStorage.setItem("pending_sync_transactions", JSON.stringify(pendingQueue));
+      
+      setSyncStatus("Saving...");
+      syncPendingTransactions(); // Trigger background sync immediately!
     } catch (err) {
-      console.log("Connection failed, saving offline.");
-      saveOffline();
-    } finally {
-      setIsSubmitLoading(false);
+      console.error("Local caching failed", err);
     }
   };
 
@@ -510,39 +517,39 @@ export default function PortalDashboard() {
       return;
     }
 
-    setIsSubmitLoading(true);
+    const tempId = "temp_cat_" + Date.now();
+    const formattedIcon = `${catSelectedEmoji}|${catSelectedColor}`;
+
+    const tempCat = {
+      _id: tempId,
+      name: catName.trim(),
+      type: catType,
+      icon: formattedIcon,
+      isSystem: false,
+      isArchived: false,
+    };
+
+    // Optimistically update categories and select it instantly!
+    setCategories((prev) => [...prev, tempCat]);
+    setTxCategory(tempId);
+    setIsCatModalOpen(false);
+    setCatName("");
+
+    // Save category to offline queue for background sync
     try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      
-      const response = await fetch("/api/v1/categories", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: catName,
-          type: catType,
-          icon: `${catSelectedEmoji}|${catSelectedColor}`,
-        }),
+      const pendingQueue = JSON.parse(localStorage.getItem("pending_sync_categories") || "[]");
+      pendingQueue.push({
+        tempId,
+        name: catName.trim(),
+        type: catType,
+        icon: formattedIcon,
       });
+      localStorage.setItem("pending_sync_categories", JSON.stringify(pendingQueue));
 
-      const res = await response.json();
-      if (!res.success) {
-        alert(res.message || "Failed to create category");
-        return;
-      }
-
-      setIsCatModalOpen(false);
-      setCatName("");
-      if (res.data && res.data._id) {
-        setTxCategory(res.data._id);
-      }
-      fetchData();
-    } catch (err: any) {
-      alert(err.message || "Failed to create category");
-    } finally {
-      setIsSubmitLoading(false);
+      setSyncStatus("Saving...");
+      syncPendingTransactions(); // Trigger background sync immediately!
+    } catch (err) {
+      console.error("Local category caching failed", err);
     }
   };
 
@@ -603,8 +610,17 @@ export default function PortalDashboard() {
     <div className="space-y-6 max-w-lg mx-auto bg-zinc-950/40 p-4 sm:p-6 rounded-3xl border border-zinc-900/60 shadow-2xl">
       
       {syncStatus && (
-        <div className="rounded-2xl bg-blue-500/10 border border-blue-500/20 p-3.5 text-xs text-blue-400 flex items-center justify-center gap-2 animate-pulse text-center font-semibold">
-          <span>{syncStatus}</span>
+        <div className="fixed top-4 right-4 z-50 rounded-2xl bg-zinc-950/80 backdrop-blur-md border border-zinc-800/80 px-4 py-3 shadow-2xl flex items-center gap-2.5 animate-in slide-in-from-top-4 duration-300">
+          <div className={`h-2.5 w-2.5 rounded-full ${
+            syncStatus === "Synced" 
+              ? "bg-emerald-500 shadow-lg shadow-emerald-500/55" 
+              : syncStatus === "Offline" || syncStatus === "Sync incomplete"
+                ? "bg-rose-500 shadow-lg shadow-rose-500/55"
+                : "bg-blue-500 animate-ping"
+          }`} />
+          <span className="text-[10px] font-bold tracking-widest uppercase text-slate-350">
+            {syncStatus === "Synced" ? "Synced with Cloud" : syncStatus === "Syncing..." ? "Syncing to Cloud" : syncStatus === "Saving..." ? "Saving Locally..." : syncStatus}
+          </span>
         </div>
       )}
 
