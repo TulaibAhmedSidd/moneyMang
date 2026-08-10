@@ -1,92 +1,36 @@
-# MoneyManage Platform
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-A Global Personal Finance and Expense Tracking Platform. Built as a secure, high-performance monorepo workspace containing a Next.js serverless backend, a React Native Expo mobile client, and a shared API client.
+## Getting Started
 
----
+First, run the development server:
 
-## 1. Monorepo Structure
-
-- **`apps/web`**: Next.js serverless backend API, database schemas, and administrative control console.
-- **`apps/mobile`**: React Native Expo app leveraging TanStack Query, SecureStore authentication, and lightweight SVG comparative charts.
-- **`packages/shared`**: Shared Zod validation schemas, timezone-shifting calculators, and normalized integer minor-unit money converters.
-- **`packages/api-client`**: SDK class package to fetch data type-safely.
-
----
-
-## 2. Installation & Quick Start
-
-### Prerequisites
-- **Node.js**: `v22.11.0` or higher
-- **npm**: `10.9.0` or higher
-
-### Local Setup
-1. Clone the repository and navigate to the project directory:
-   ```bash
-   git clone https://github.com/TulaibAhmedSidd/moneyManage.git
-   cd moneyManage
-   ```
-2. Install dependencies at the workspace root (this links workspaces automatically):
-   ```bash
-   npm install
-   ```
-3. Set up the environment file. Create `apps/web/.env` and insert your secrets:
-   ```env
-
----
-
-## 3. Running the Applications Locally
-
-### A. Run Backend & Web (Next.js)
-Start the Next.js development server:
 ```bash
-npm run dev -w apps/web
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
-The API is available at `http://localhost:3000`.
 
-### B. Run Mobile App (Expo)
-Start the Expo Metro bundler:
-```bash
-npm run dev -w apps/mobile
-```
-- Download the **Expo Go** application on your mobile device.
-- Scan the QR code displayed in your terminal. Note: both your computer and phone must be connected to the **same Wi-Fi network**.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
----
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 4. Administrative Features (Admin Console)
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### Accessing the Admin Panel
-1. The Admin Dashboard is located at `/admin` (e.g. `http://localhost:3000/admin`).
-2. Log in with a user possessing `ADMIN` or `SUPER_ADMIN` credentials.
-3. Access:
-   - **Dashboard**: Global system statistics, active user percentages, total transaction volume in minor units, and live transaction log trackers.
-   - **User Management**: Search registered users, pagination pages, update roles, and suspend/activate user login permissions in real-time.
+## Learn More
 
----
+To learn more about Next.js, take a look at the following resources:
 
-## 5. Deployment Guide
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-### A. Backend Deployment (Vercel)
-1. Go to [Vercel](https://vercel.com) and import your Git repository.
-2. Select `apps/web` as the root directory.
-3. Set the Environment Variables (`MONGO_URI`, `JWT_SECRET`, `SMTP_EMAIL`, `SMTP_PASSWORD`) in the Project Settings.
-4. Click **Deploy**. Vercel will handle building and hosting automatically.
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-### B. Standalone Mobile App Build (Expo EAS)
-1. Install Expo EAS CLI:
-   ```bash
-   npm install -g eas-cli
-   ```
-2. Log in to Expo and build:
-   ```bash
-   cd apps/mobile
-   eas login
-   eas build --platform android --profile preview
-   ```
-This will compile an installable `.apk` file for your Android device.
+## Deploy on Vercel
 
----
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-## 6. Development Rules & Standards
-
-For details on architecture design rules, dynamic timezone offsets, minor units conversions, payload input XSS sanitizers, and shared theme color systems, refer to [`standards.md`](./standards.md).
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
