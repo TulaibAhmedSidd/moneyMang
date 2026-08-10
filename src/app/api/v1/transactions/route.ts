@@ -6,6 +6,7 @@ import Category from "@/models/Category";
 import { verifyAuth, AuthError } from "@/lib/auth";
 import { transactionSchema } from "@/shared";
 import { sanitizeObject } from "@/utils/sanitize";
+import mongoose from "mongoose";
 
 export async function GET(request: Request) {
   try {
@@ -172,7 +173,7 @@ export async function POST(request: Request) {
       title: title.trim(),
       description: description?.trim(),
       date: new Date(date),
-      idempotencyKey: idempotencyKey || undefined,
+      idempotencyKey: idempotencyKey || new mongoose.Types.ObjectId().toString(),
     });
 
     const populatedTx = await Transaction.findById(newTransaction._id)
@@ -200,6 +201,7 @@ export async function POST(request: Request) {
         {
           success: false,
           message: "Transaction submission is already being processed. Please refresh.",
+          debugError: error.message || error.toString()
         },
         { status: 409 }
       );
