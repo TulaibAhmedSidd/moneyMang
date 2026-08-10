@@ -765,8 +765,8 @@ export default function PortalDashboard() {
               );
             })}
           </svg>
-          <div className="absolute flex flex-col items-center justify-center text-center">
-            <span className="text-[18px] font-extrabold text-white">
+          <div className="absolute flex flex-col items-center justify-center text-center px-4 max-w-[100px]">
+            <span className="text-[11px] font-bold text-slate-300 tracking-tight">
               {formatMoney(totalPeriodAmount, user?.preferredCurrency || "USD")}
             </span>
           </div>

@@ -31,7 +31,7 @@ export function formatMoney(amount: number, currency: string): string {
   const currencyUpper = currency.toUpperCase();
   const meta = SUPPORTED_CURRENCIES[currencyUpper] || SUPPORTED_CURRENCIES[DEFAULT_CURRENCY];
   const majorAmount = toMajorUnits(amount, currencyUpper);
-  const fractionDigits = meta.minorUnit;
+  const fractionDigits = 0; // Remove .00 decimals globally
 
   if (currencyUpper === "PKR") {
     const formatted = new Intl.NumberFormat("en-US", {
