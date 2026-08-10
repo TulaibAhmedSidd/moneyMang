@@ -11,6 +11,25 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
+  const [themeColor, setThemeColor] = useState("#3b82f6");
+
+  const loadTheme = () => {
+    const savedAccent = localStorage.getItem("theme_accent");
+    if (savedAccent) setThemeColor(savedAccent);
+  };
+
+  useEffect(() => {
+    loadTheme();
+    if (typeof window !== "undefined") {
+      window.addEventListener("theme-changed", loadTheme);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("theme-changed", loadTheme);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     const userStr = localStorage.getItem("user");
@@ -82,7 +101,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       {/* Sidebar for Desktop */}
       <aside className="hidden md:flex w-64 flex-col border-r border-zinc-800/80 bg-zinc-900/40 backdrop-blur-xl">
         <div className="flex h-16 items-center px-6 border-b border-zinc-800/80 gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 font-bold text-white">M</div>
+          <div 
+            className="flex h-8 w-8 items-center justify-center rounded-lg font-bold text-white"
+            style={{ backgroundColor: themeColor }}
+          >
+            M
+          </div>
           <span className="text-lg font-bold tracking-tight text-white">MoneyManage</span>
         </div>
 
@@ -95,9 +119,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition ${
                   isActive
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/10"
+                    ? "text-white"
                     : "text-slate-400 hover:bg-zinc-800/60 hover:text-white"
                 }`}
+                style={isActive ? { backgroundColor: themeColor, boxShadow: `0 10px 15px -3px ${themeColor}30` } : {}}
               >
                 <span className="text-lg">{item.icon}</span>
                 {item.name}
@@ -127,7 +152,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       {/* Mobile Header */}
       <header className="flex md:hidden h-14 items-center justify-between border-b border-zinc-800/80 bg-zinc-900/60 backdrop-blur px-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 font-bold text-white text-xs">M</div>
+          <div 
+            className="flex h-7 w-7 items-center justify-center rounded-md font-bold text-white text-xs"
+            style={{ backgroundColor: themeColor }}
+          >
+            M
+          </div>
           <span className="text-sm font-bold text-white">MoneyManage</span>
         </div>
         <button
@@ -153,8 +183,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               key={item.name}
               href={item.href}
               className={`flex flex-col items-center justify-center flex-1 py-1 gap-1 text-[10px] font-medium transition ${
-                isActive ? "text-blue-500" : "text-slate-500 hover:text-slate-300"
+                isActive ? "" : "text-slate-500 hover:text-slate-300"
               }`}
+              style={isActive ? { color: themeColor } : {}}
             >
               <span className="text-xl">{item.icon}</span>
               <span>{item.name}</span>

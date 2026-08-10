@@ -66,6 +66,7 @@ export default function PortalDashboard() {
   // Offline & Synchronization states
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [themeColor, setThemeColor] = useState("#3b82f6");
 
   // Layout settings (Expenses/Income segment & Timeframe filters)
   const [activeType, setActiveType] = useState<"expense" | "income">("expense");
@@ -176,7 +177,9 @@ export default function PortalDashboard() {
       const cachedCat = localStorage.getItem("cached_categories");
       const cachedTx = localStorage.getItem("cached_transactions");
       const cachedUser = localStorage.getItem("user");
+      const savedAccent = localStorage.getItem("theme_accent");
 
+      if (savedAccent) setThemeColor(savedAccent);
       if (cachedUser) setUser(JSON.parse(cachedUser));
       if (cachedAcc) setAccounts(JSON.parse(cachedAcc));
       if (cachedCat) setCategories(JSON.parse(cachedCat));
@@ -347,8 +350,14 @@ export default function PortalDashboard() {
     loadCachedData();
     fetchData(false);
 
+    const updateTheme = () => {
+      const savedAccent = localStorage.getItem("theme_accent");
+      if (savedAccent) setThemeColor(savedAccent);
+    };
+
     if (typeof window !== "undefined") {
       window.addEventListener("online", syncPendingTransactions);
+      window.addEventListener("theme-changed", updateTheme);
       
       if (navigator.onLine) {
         syncPendingTransactions();
@@ -356,6 +365,7 @@ export default function PortalDashboard() {
       
       return () => {
         window.removeEventListener("online", syncPendingTransactions);
+        window.removeEventListener("theme-changed", updateTheme);
       };
     }
   }, [timeframe, filterDate]);
@@ -683,8 +693,9 @@ export default function PortalDashboard() {
               key={t}
               onClick={() => setTimeframe(t)}
               className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition ${
-                timeframe === t ? "bg-blue-600 text-white" : "text-slate-500 hover:text-white"
+                timeframe === t ? "text-white" : "text-slate-500 hover:text-white"
               }`}
+              style={timeframe === t ? { backgroundColor: themeColor } : {}}
             >
               {t}
             </button>
@@ -889,7 +900,8 @@ export default function PortalDashboard() {
                       setCatType(activeType);
                       setIsCatModalOpen(true);
                     }}
-                    className="mt-1.5 text-[10px] font-bold text-blue-500 hover:text-blue-400 flex items-center gap-1 cursor-pointer"
+                    style={{ color: themeColor }}
+                    className="mt-1.5 text-[10px] font-bold flex items-center gap-1 cursor-pointer hover:opacity-80"
                   >
                     ➕ Create Category
                   </button>
@@ -910,7 +922,8 @@ export default function PortalDashboard() {
               <button
                 type="submit"
                 disabled={isSubmitLoading}
-                className="w-full rounded-xl bg-blue-600 py-3 text-xs font-bold text-white transition hover:bg-blue-500 disabled:bg-blue-800/50 cursor-pointer mt-4"
+                style={{ backgroundColor: themeColor }}
+                className="w-full rounded-xl py-3 text-xs font-bold text-white transition opacity-90 hover:opacity-100 disabled:opacity-50 cursor-pointer mt-4"
               >
                 {isSubmitLoading ? "Saving Transaction..." : "Save Transaction"}
               </button>

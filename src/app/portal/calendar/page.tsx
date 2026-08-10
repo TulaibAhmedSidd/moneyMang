@@ -92,13 +92,16 @@ export default function FinancialCalendar() {
     return days;
   }, [year, month, firstDayIndex, totalDays, prevMonthTotalDays]);
 
-  // Group transactions by date string YYYY-MM-DD
+  // Group transactions by date string YYYY-MM-DD (local client timezone)
   const transactionsByDate = useMemo(() => {
     const map: Record<string, any[]> = {};
     transactions.forEach((tx) => {
       const d = new Date(tx.date);
-      // Format as local timezone date string
-      const dateStr = d.toISOString().split("T")[0];
+      const yStr = d.getFullYear();
+      const mStr = String(d.getMonth() + 1).padStart(2, "0");
+      const dStr = String(d.getDate()).padStart(2, "0");
+      const dateStr = `${yStr}-${mStr}-${dStr}`;
+      
       if (!map[dateStr]) map[dateStr] = [];
       map[dateStr].push(tx);
     });
