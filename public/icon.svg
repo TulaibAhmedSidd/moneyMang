@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#f3f4f6;stop-opacity:0.8" />
+    </linearGradient>
+  </defs>
+  <!-- Background Card -->
+  <rect width="512" height="512" rx="128" fill="url(#grad1)" />
+  
+  <!-- Outer Glow circle -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="rgba(255, 255, 255, 0.15)" stroke-width="8" stroke-dasharray="16 12" />
+  
+  <!-- Inside Money Wallet Logo -->
+  <g transform="translate(128, 128)">
+    <!-- Wallet Back -->
+    <rect x="16" y="48" width="224" height="160" rx="24" fill="rgba(255,255,255,0.2)" />
+    <!-- Wallet Front Card -->
+    <rect x="32" y="32" width="192" height="160" rx="20" fill="url(#grad2)" />
+    <!-- Wallet Belt/Lock -->
+    <path d="M 180 88 L 224 88 C 236 88 244 96 244 108 L 244 128 C 244 140 236 148 224 148 L 180 148 Z" fill="#1e1b4b" />
+    <!-- Belt Gold Lock Circle -->
+    <circle cx="212" cy="118" r="12" fill="#fbbf24" />
+    <!-- Card details lines -->
+    <rect x="56" y="64" width="64" height="12" rx="4" fill="#3b82f6" opacity="0.4" />
+    <rect x="56" y="96" width="96" height="8" rx="3" fill="#6b7280" opacity="0.3" />
+    <rect x="56" y="116" width="72" height="8" rx="3" fill="#6b7280" opacity="0.3" />
+  </g>
+</svg>
