@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import { formatMoney } from "@/shared";
+import { formatMoney, formatAbbreviated, formatRomanUrdu } from "@/shared";
 
 type Timeframe = "day" | "week" | "month" | "year";
 
@@ -640,6 +640,11 @@ export default function PortalDashboard() {
         <h2 className="text-3xl font-extrabold text-white mt-1.5 tracking-tight">
           {formatMoney(totalBalance, user?.preferredCurrency || "USD")}
         </h2>
+        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider flex items-center gap-1.5">
+          <span>{formatAbbreviated(totalBalance, user?.preferredCurrency || "USD")} {user?.preferredCurrency || "USD"}</span>
+          <span className="text-slate-600">•</span>
+          <span className="text-slate-450 font-semibold lowercase italic">{formatRomanUrdu(totalBalance, user?.preferredCurrency || "USD")}</span>
+        </p>
         
         {/* Buttons to initialize wallets */}
         {accounts.length === 0 && (
