@@ -25,6 +25,34 @@ const CATEGORY_EMOJIS = [
   "💼", "📈", "🍿", "🎮", "👚", "📚", "💈", "🧸"
 ];
 
+// Helper to get local date string YYYY-MM-DD
+const getLocalYMD = (date = new Date()) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+// Helper to construct ISO Date string incorporating active local time
+const getISODateWithLocalTime = (ymdString: string) => {
+  try {
+    const [year, month, day] = ymdString.split("-").map(Number);
+    const now = new Date();
+    const localDate = new Date(
+      year,
+      month - 1,
+      day,
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds(),
+      now.getMilliseconds()
+    );
+    return localDate.toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+};
+
 export default function PortalDashboard() {
   const [user, setUser] = useState<any>(null);
   const [accounts, setAccounts] = useState<any[]>([]);
@@ -51,7 +79,7 @@ export default function PortalDashboard() {
   const [txAccount, setTxAccount] = useState("");
   const [txCategory, setTxCategory] = useState("");
   const [txDescription, setTxDescription] = useState("");
-  const [txDate, setTxDate] = useState(new Date().toISOString().split("T")[0]);
+  const [txDate, setTxDate] = useState(getLocalYMD());
 
   // Account Initialization State
   const [isAccModalOpen, setIsAccModalOpen] = useState(false);
@@ -362,7 +390,7 @@ export default function PortalDashboard() {
     setTxTitle("");
     setTxAmount("");
     setTxDescription("");
-    setTxDate(new Date().toISOString().split("T")[0]);
+    setTxDate(getLocalYMD());
     if (accounts.length > 0) setTxAccount(accounts[0]._id);
     const filteredCats = categories.filter((c) => c.type === type);
     if (filteredCats.length > 0) setTxCategory(filteredCats[0]._id);
@@ -390,7 +418,7 @@ export default function PortalDashboard() {
       accountId: selectedAcc ? { _id: selectedAcc._id, name: selectedAcc.name } : txAccount,
       categoryId: selectedCat ? { _id: selectedCat._id, name: selectedCat.name, icon: selectedCat.icon } : txCategory,
       description: txDescription,
-      date: new Date(txDate).toISOString(),
+      date: getISODateWithLocalTime(txDate),
       currency: user?.preferredCurrency || "USD",
       isPendingSync: true,
     };
@@ -407,7 +435,7 @@ export default function PortalDashboard() {
           accountId: txAccount,
           categoryId: txCategory,
           description: txDescription,
-          date: new Date(txDate).toISOString(),
+          date: getISODateWithLocalTime(txDate),
           currency: user?.preferredCurrency || "USD",
         });
         localStorage.setItem("pending_sync_transactions", JSON.stringify(pendingQueue));
@@ -454,7 +482,7 @@ export default function PortalDashboard() {
           accountId: txAccount,
           categoryId: txCategory,
           description: txDescription,
-          date: new Date(txDate).toISOString(),
+          date: getISODateWithLocalTime(txDate),
           currency: user?.preferredCurrency || "USD",
         }),
       });
