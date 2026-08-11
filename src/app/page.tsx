@@ -140,6 +140,69 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Getting Started Steps Section */}
+        <section id="steps" className="pt-28 border-t border-zinc-900/60 mt-16">
+          <div className="text-center max-w-3xl mx-auto flex flex-col gap-4">
+            <h2 className="text-xs font-semibold tracking-wider text-blue-500 uppercase">How it works</h2>
+            <p className="text-3xl font-bold tracking-tight text-white sm:text-4xl">4 Steps to Financial Control</p>
+            <p className="text-slate-400">Get up and running in less than 2 minutes. Follow these simple steps.</p>
+          </div>
+
+          <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Step 1 */}
+            <div className="relative rounded-2xl border border-zinc-900 bg-zinc-900/20 p-8 backdrop-blur flex flex-col justify-between">
+              <div>
+                <div className="absolute -top-4 left-6 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-extrabold text-white shadow-lg shadow-blue-500/20">
+                  1
+                </div>
+                <h3 className="text-lg font-bold text-white mt-2">Create a Wallet</h3>
+                <p className="mt-3 text-xs leading-relaxed text-slate-400">
+                  Sign up and initialize your virtual wallet accounts (e.g. Cash, bank accounts, or savings) in your preferred currency.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="relative rounded-2xl border border-zinc-900 bg-zinc-900/20 p-8 backdrop-blur flex flex-col justify-between">
+              <div>
+                <div className="absolute -top-4 left-6 flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-extrabold text-white shadow-lg shadow-indigo-500/20">
+                  2
+                </div>
+                <h3 className="text-lg font-bold text-white mt-2">Log Daily Entries</h3>
+                <p className="mt-3 text-xs leading-relaxed text-slate-400">
+                  Log your expenses or incomes instantly. Add comments, amounts, and dates. All changes are saved locally first for a zero-lag experience.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="relative rounded-2xl border border-zinc-900 bg-zinc-900/20 p-8 backdrop-blur flex flex-col justify-between">
+              <div>
+                <div className="absolute -top-4 left-6 flex h-8 w-8 items-center justify-center rounded-lg bg-purple-600 text-sm font-extrabold text-white shadow-lg shadow-purple-500/20">
+                  3
+                </div>
+                <h3 className="text-lg font-bold text-white mt-2">Customize Colors</h3>
+                <p className="mt-3 text-xs leading-relaxed text-slate-400">
+                  Assign personalized emojis to your categories and pick from 5 vibrant dashboard accent themes (Blue, Emerald, Violet, Rose, or Amber).
+                </p>
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="relative rounded-2xl border border-zinc-900 bg-zinc-900/20 p-8 backdrop-blur flex flex-col justify-between">
+              <div>
+                <div className="absolute -top-4 left-6 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-sm font-extrabold text-white shadow-lg shadow-emerald-500/20">
+                  4
+                </div>
+                <h3 className="text-lg font-bold text-white mt-2">Export & Analyze</h3>
+                <p className="mt-3 text-xs leading-relaxed text-slate-400">
+                  Review calendar grids and spending charts in real-time, then export your data to Excel-compatible CSV files from your settings panel.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Feature breakdown section */}
         <section id="features" className="pt-28">
           <div className="text-center max-w-3xl mx-auto flex flex-col gap-4">
