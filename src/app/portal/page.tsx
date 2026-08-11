@@ -68,6 +68,17 @@ export default function PortalDashboard() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [themeColor, setThemeColor] = useState("#3b82f6");
 
+  // Edit Transaction Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editTxId, setEditTxId] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editAccount, setEditAccount] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editType, setEditType] = useState<"income" | "expense">("expense");
+
   // Layout settings (Expenses/Income segment & Timeframe filters)
   const [activeType, setActiveType] = useState<"expense" | "income">("expense");
   const [timeframe, setTimeframe] = useState<Timeframe>("day");
@@ -193,15 +204,26 @@ export default function PortalDashboard() {
     }
   };
 
-  // Sync Offline Queue (Categories & Transactions) to Backend
+  // Sync Offline Queue (Categories & Transactions & Edits & Deletes) to Backend
   const syncPendingTransactions = async () => {
     const pendingCatsStr = localStorage.getItem("pending_sync_categories");
     const pendingTxsStr = localStorage.getItem("pending_sync_transactions");
+    const pendingEditsStr = localStorage.getItem("pending_edit_transactions");
+    const pendingDeletesStr = localStorage.getItem("pending_delete_transactions");
 
     const pendingCats = pendingCatsStr ? JSON.parse(pendingCatsStr) : [];
     const pendingTxs = pendingTxsStr ? JSON.parse(pendingTxsStr) : [];
+    const pendingEdits = pendingEditsStr ? JSON.parse(pendingEditsStr) : [];
+    const pendingDeletes = pendingDeletesStr ? JSON.parse(pendingDeletesStr) : [];
 
-    if (pendingCats.length === 0 && pendingTxs.length === 0) return;
+    if (
+      pendingCats.length === 0 &&
+      pendingTxs.length === 0 &&
+      pendingEdits.length === 0 &&
+      pendingDeletes.length === 0
+    ) {
+      return;
+    }
 
     setIsSyncing(true);
     setSyncStatus("Syncing...");
@@ -243,7 +265,7 @@ export default function PortalDashboard() {
         localStorage.setItem("pending_sync_categories", JSON.stringify(remainingCats));
       }
 
-      // 2. Sync Transactions
+      // 2. Sync Inserts
       const remainingTxs: any[] = [];
       for (const tx of pendingTxs) {
         let catId = tx.categoryId;
@@ -278,7 +300,68 @@ export default function PortalDashboard() {
         localStorage.setItem("pending_sync_transactions", JSON.stringify(remainingTxs));
       }
 
-      const totalRemaining = remainingCats.length + remainingTxs.length;
+      // 3. Sync Edits
+      const remainingEdits: any[] = [];
+      for (const edit of pendingEdits) {
+        if (edit._id.startsWith("temp_")) continue;
+
+        try {
+          const res = await fetch(`/api/v1/transactions/${edit._id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(edit),
+          });
+          const json = await res.json();
+          if (!json.success) {
+            remainingEdits.push(edit);
+          }
+        } catch {
+          remainingEdits.push(edit);
+        }
+      }
+
+      if (remainingEdits.length === 0) {
+        localStorage.removeItem("pending_edit_transactions");
+      } else {
+        localStorage.setItem("pending_edit_transactions", JSON.stringify(remainingEdits));
+      }
+
+      // 4. Sync Deletes
+      const remainingDeletes: any[] = [];
+      for (const id of pendingDeletes) {
+        if (id.startsWith("temp_")) continue;
+
+        try {
+          const res = await fetch(`/api/v1/transactions/${id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const json = await res.json();
+          if (!json.success) {
+            remainingDeletes.push(id);
+          }
+        } catch {
+          remainingDeletes.push(id);
+        }
+      }
+
+      if (remainingDeletes.length === 0) {
+        localStorage.removeItem("pending_delete_transactions");
+      } else {
+        localStorage.setItem("pending_delete_transactions", JSON.stringify(remainingDeletes));
+      }
+
+      const totalRemaining =
+        remainingCats.length +
+        remainingTxs.length +
+        remainingEdits.length +
+        remainingDeletes.length;
+
       if (totalRemaining === 0) {
         setSyncStatus("Synced");
         setTimeout(() => setSyncStatus(null), 2500);
@@ -608,6 +691,126 @@ export default function PortalDashboard() {
     }
   };
 
+  const openEditModal = (tx: any) => {
+    setEditTxId(tx._id);
+    setEditTitle(tx.title);
+    setEditAmount((tx.amount / 100).toString());
+    setEditAccount(tx.accountId?._id || tx.accountId);
+    setEditCategory(tx.categoryId?._id || tx.categoryId);
+    setEditDescription(tx.description || "");
+    setEditDate(getLocalYMD(new Date(tx.date)));
+    setEditType(tx.type);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditTransaction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editAmount || !editTitle || !editAccount || !editCategory) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    const amountVal = parseFloat(editAmount);
+    const minorAmount = Math.round(amountVal * 100);
+
+    const oldTx = transactions.find((t) => t._id === editTxId);
+    if (!oldTx) return;
+
+    const selectedCat = categories.find((c) => c._id === editCategory);
+    const selectedAcc = accounts.find((a) => a._id === editAccount);
+
+    const updatedTx = {
+      ...oldTx,
+      title: editTitle,
+      amount: minorAmount,
+      accountId: selectedAcc ? { _id: selectedAcc._id, name: selectedAcc.name } : editAccount,
+      categoryId: selectedCat ? { _id: selectedCat._id, name: selectedCat.name, icon: selectedCat.icon } : editCategory,
+      description: editDescription,
+      date: getISODateWithLocalTime(editDate),
+      type: editType,
+    };
+
+    const oldMinor = oldTx.amount;
+    const oldType = oldTx.type;
+
+    setAccounts((prevAccounts) =>
+      prevAccounts.map((acc) => {
+        let bal = acc.balance ?? 0;
+        const oldAccId = oldTx.accountId?._id || oldTx.accountId;
+        if (acc._id === oldAccId) {
+          const oldDiff = oldType === "income" ? -oldMinor : oldMinor;
+          bal += oldDiff;
+        }
+        if (acc._id === editAccount) {
+          const newDiff = editType === "income" ? minorAmount : -minorAmount;
+          bal += newDiff;
+        }
+        return { ...acc, balance: bal };
+      })
+    );
+
+    setTransactions((prev) =>
+      prev.map((t) => (t._id === editTxId ? updatedTx : t))
+    );
+    setIsEditModalOpen(false);
+
+    try {
+      const pendingEdits = JSON.parse(localStorage.getItem("pending_edit_transactions") || "[]");
+      pendingEdits.push({
+        _id: editTxId,
+        amount: minorAmount,
+        type: editType,
+        title: editTitle,
+        accountId: editAccount,
+        categoryId: editCategory,
+        description: editDescription,
+        date: getISODateWithLocalTime(editDate),
+        currency: oldTx.currency || "PKR",
+      });
+      localStorage.setItem("pending_edit_transactions", JSON.stringify(pendingEdits));
+
+      setSyncStatus("Saving...");
+      syncPendingTransactions();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteTransaction = async () => {
+    if (!confirm("Are you sure you want to delete this log?")) return;
+
+    const oldTx = transactions.find((t) => t._id === editTxId);
+    if (!oldTx) return;
+
+    const minorAmount = oldTx.amount;
+    const oldAccId = oldTx.accountId?._id || oldTx.accountId;
+    const oldType = oldTx.type;
+
+    setAccounts((prevAccounts) =>
+      prevAccounts.map((acc) => {
+        if (acc._id === oldAccId) {
+          const diff = oldType === "income" ? -minorAmount : minorAmount;
+          return { ...acc, balance: (acc.balance ?? 0) + diff };
+        }
+        return acc;
+      })
+    );
+
+    setTransactions((prev) => prev.filter((t) => t._id !== editTxId));
+    setIsEditModalOpen(false);
+
+    try {
+      const pendingDeletes = JSON.parse(localStorage.getItem("pending_delete_transactions") || "[]");
+      pendingDeletes.push(editTxId);
+      localStorage.setItem("pending_delete_transactions", JSON.stringify(pendingDeletes));
+
+      setSyncStatus("Saving...");
+      syncPendingTransactions();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (isLoading && transactions.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -817,6 +1020,48 @@ export default function PortalDashboard() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Recent Logs List */}
+      <div className="space-y-3 pt-2">
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Recent Logs</h3>
+        {activeTransactions.length === 0 ? (
+          <div className="text-center py-8 border border-dashed border-zinc-900 rounded-2xl bg-zinc-900/5 text-xs text-slate-500">
+            No transaction logs recorded in this period.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {activeTransactions.slice(0, 5).map((tx) => {
+              const cat = resolveCategory(tx.categoryId);
+              const isIncome = tx.type === "income";
+              return (
+                <div
+                  key={tx._id}
+                  onClick={() => openEditModal(tx)}
+                  className="flex justify-between items-center py-3 px-4 bg-zinc-900/35 border border-zinc-900/60 rounded-2xl hover:bg-zinc-900/50 transition cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-sm"
+                      style={{ backgroundColor: cat.color + "15", border: `1px solid ${cat.color}35` }}
+                    >
+                      <span>{cat.icon}</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white truncate max-w-[150px]">{tx.title}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        {new Date(tx.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`text-xs font-bold ${isIncome ? "text-emerald-400" : "text-slate-350"}`}>
+                    {isIncome ? "+" : "-"} {formatMoney(tx.amount, tx.currency)}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -1091,6 +1336,140 @@ export default function PortalDashboard() {
               >
                 {isSubmitLoading ? "Creating Wallet..." : "Save Account"}
               </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Transaction Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 px-6 py-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center pb-4 border-b border-zinc-800">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                Edit Log Detail
+              </h3>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-white text-xl">✕</button>
+            </div>
+
+            <form onSubmit={handleEditTransaction} className="mt-4 space-y-4">
+              <div className="flex bg-zinc-950 p-1 rounded-2xl border border-zinc-850">
+                <button
+                  type="button"
+                  onClick={() => setEditType("expense")}
+                  className={`flex-1 text-center py-2 text-xs font-bold uppercase rounded-xl transition ${
+                    editType === "expense" ? "bg-zinc-850 text-white" : "text-slate-500 hover:text-slate-300"
+                  }`}
+                >
+                  Expense
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditType("income")}
+                  className={`flex-1 text-center py-2 text-xs font-bold uppercase rounded-xl transition ${
+                    editType === "income" ? "bg-zinc-850 text-white" : "text-slate-500 hover:text-slate-300"
+                  }`}
+                >
+                  Income
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Title / Payee</label>
+                <input
+                  type="text"
+                  required
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                  placeholder="e.g. KFC, Salary"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Amount</label>
+                  <input
+                    type="number"
+                    step="any"
+                    required
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={editDate}
+                    onChange={(e) => setEditDate(e.target.value)}
+                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Wallet Account</label>
+                  <select
+                    value={editAccount}
+                    onChange={(e) => setEditAccount(e.target.value)}
+                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                  >
+                    {accounts.map((a) => (
+                      <option key={a._id} value={a._id}>{a.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                  >
+                    {categories.filter((c) => c.type === editType).map((c) => {
+                      const { icon } = resolveCategory(c);
+                      return (
+                        <option key={c._id} value={c._id}>
+                          {icon} {c.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Description</label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                  placeholder="Memo detail..."
+                  rows={2}
+                />
+              </div>
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={handleDeleteTransaction}
+                  className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs font-bold text-rose-400 transition hover:bg-rose-500/20 cursor-pointer"
+                >
+                  Delete
+                </button>
+                <button
+                  type="submit"
+                  style={{ backgroundColor: themeColor }}
+                  className="flex-1 rounded-xl py-3 text-xs font-bold text-white transition opacity-90 hover:opacity-100 cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
             </form>
           </div>
         </div>
