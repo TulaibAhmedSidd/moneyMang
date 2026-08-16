@@ -79,6 +79,11 @@ export default function PortalDashboard() {
   const [editDate, setEditDate] = useState("");
   const [editType, setEditType] = useState<"income" | "expense">("expense");
 
+  // Category Picker State
+  const [isCatPickerOpen, setIsCatPickerOpen] = useState(false);
+  const [catPickerTarget, setCatPickerTarget] = useState<"add" | "edit">("add");
+  const [catSearchQuery, setCatSearchQuery] = useState("");
+
   // Layout settings (Expenses/Income segment & Timeframe filters)
   const [activeType, setActiveType] = useState<"expense" | "income">("expense");
   const [timeframe, setTimeframe] = useState<Timeframe>("day");
@@ -542,6 +547,11 @@ export default function PortalDashboard() {
     setIsModalOpen(true);
   };
 
+  const openTxModalWithCategory = (catId: string) => {
+    openTxModal(activeType);
+    setTxCategory(catId);
+  };
+
   const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!txAmount || !txTitle || !txAccount || !txCategory) {
@@ -996,9 +1006,11 @@ export default function PortalDashboard() {
         ) : (
           <div className="space-y-2">
             {categoryBreakdown.map((item) => (
-              <div
+              <button
                 key={item.id}
-                className="flex justify-between items-center py-3 px-4 bg-zinc-900/30 border border-zinc-900/80 rounded-2xl hover:bg-zinc-900/50 transition"
+                type="button"
+                onClick={() => openTxModalWithCategory(item.id)}
+                className="w-full flex justify-between items-center py-3 px-4 bg-zinc-900/30 border border-zinc-900/80 rounded-2xl hover:bg-zinc-900/50 transition text-left cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -1018,7 +1030,7 @@ export default function PortalDashboard() {
                     {formatMoney(item.amount, user?.preferredCurrency || "USD")}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -1130,30 +1142,26 @@ export default function PortalDashboard() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</label>
-                  <select
-                    value={txCategory}
-                    onChange={(e) => setTxCategory(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
-                  >
-                    {categories.filter((c) => c.type === activeType).map((c) => {
-                      const { icon } = resolveCategory(c);
-                      return (
-                        <option key={c._id} value={c._id}>
-                          {icon} {c.name}
-                        </option>
-                      );
-                    })}
-                  </select>
                   <button
                     type="button"
                     onClick={() => {
-                      setCatType(activeType);
-                      setIsCatModalOpen(true);
+                      setCatPickerTarget("add");
+                      setCatSearchQuery("");
+                      setIsCatPickerOpen(true);
                     }}
-                    style={{ color: themeColor }}
-                    className="mt-1.5 text-[10px] font-bold flex items-center gap-1 cursor-pointer hover:opacity-80"
+                    className="mt-1 flex w-full items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none hover:border-zinc-700 transition cursor-pointer"
                   >
-                    ➕ Create Category
+                    {(() => {
+                      const currentCat = categories.find((c) => c._id === txCategory);
+                      const { icon } = resolveCategory(currentCat);
+                      return (
+                        <span className="flex items-center gap-2 text-left">
+                          <span className="text-sm">{icon}</span>
+                          <span className="font-semibold text-slate-200">{currentCat ? currentCat.name : "Select Category"}</span>
+                        </span>
+                      );
+                    })()}
+                    <span className="text-slate-500 text-[10px]">▼</span>
                   </button>
                 </div>
               </div>
@@ -1426,20 +1434,27 @@ export default function PortalDashboard() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</label>
-                  <select
-                    value={editCategory}
-                    onChange={(e) => setEditCategory(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCatPickerTarget("edit");
+                      setCatSearchQuery("");
+                      setIsCatPickerOpen(true);
+                    }}
+                    className="mt-1 flex w-full items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none hover:border-zinc-700 transition cursor-pointer"
                   >
-                    {categories.filter((c) => c.type === editType).map((c) => {
-                      const { icon } = resolveCategory(c);
+                    {(() => {
+                      const currentCat = categories.find((c) => c._id === editCategory);
+                      const { icon } = resolveCategory(currentCat);
                       return (
-                        <option key={c._id} value={c._id}>
-                          {icon} {c.name}
-                        </option>
+                        <span className="flex items-center gap-2 text-left">
+                          <span className="text-sm">{icon}</span>
+                          <span className="font-semibold text-slate-200">{currentCat ? currentCat.name : "Select Category"}</span>
+                        </span>
                       );
-                    })}
-                  </select>
+                    })()}
+                    <span className="text-slate-500 text-[10px]">▼</span>
+                  </button>
                 </div>
               </div>
 
@@ -1471,6 +1486,110 @@ export default function PortalDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Category Selection Modal */}
+      {isCatPickerOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-3xl border border-zinc-800 bg-zinc-900 px-5 py-5 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center pb-3 border-b border-zinc-800">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                Select Category
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsCatPickerOpen(false)}
+                className="text-slate-400 hover:text-white text-base cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mt-3">
+              <input
+                type="text"
+                value={catSearchQuery}
+                onChange={(e) => setCatSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-550"
+                placeholder="Search categories..."
+              />
+            </div>
+
+            {/* Scrollable Categories List */}
+            <div className="mt-4 max-h-60 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+              {(() => {
+                const currentType = catPickerTarget === "add" ? activeType : editType;
+                const filtered = categories
+                  .filter((c) => c.type === currentType)
+                  .filter((c) => c.name.toLowerCase().includes(catSearchQuery.toLowerCase()));
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center py-6 text-xs text-slate-500">
+                      No categories found.
+                    </div>
+                  );
+                }
+
+                return filtered.map((c) => {
+                  const { icon, color } = resolveCategory(c);
+                  const isSelected = catPickerTarget === "add" ? txCategory === c._id : editCategory === c._id;
+                  
+                  return (
+                    <button
+                      key={c._id}
+                      type="button"
+                      onClick={() => {
+                        if (catPickerTarget === "add") {
+                          setTxCategory(c._id);
+                        } else {
+                          setEditCategory(c._id);
+                        }
+                        setIsCatPickerOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer text-left ${
+                        isSelected 
+                          ? "bg-zinc-850 border border-zinc-750" 
+                          : "hover:bg-zinc-850/55 border border-transparent"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-sm"
+                          style={{ backgroundColor: color + "15", border: `1px solid ${color}30` }}
+                        >
+                          <span>{icon}</span>
+                        </div>
+                        <span className="text-xs font-bold text-white">{c.name}</span>
+                      </div>
+                      {isSelected && (
+                        <span style={{ color: themeColor }} className="text-xs font-extrabold">✓</span>
+                      )}
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Add Category Trigger Button */}
+            <div className="mt-4 pt-3 border-t border-zinc-800">
+              <button
+                type="button"
+                onClick={() => {
+                  const currentType = catPickerTarget === "add" ? activeType : editType;
+                  setCatType(currentType);
+                  setIsCatPickerOpen(false);
+                  setIsCatModalOpen(true);
+                }}
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-950 py-2.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-zinc-850 transition cursor-pointer"
+              >
+                <span>➕</span>
+                <span>Create New Category</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
