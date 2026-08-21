@@ -210,7 +210,7 @@ export default function PortalDashboard() {
   };
 
   // Sync Offline Queue (Categories & Transactions & Edits & Deletes) to Backend
-  const syncPendingTransactions = async () => {
+  const syncPendingTransactions = async (silent = false) => {
     const pendingCatsStr = localStorage.getItem("pending_sync_categories");
     const pendingTxsStr = localStorage.getItem("pending_sync_transactions");
     const pendingEditsStr = localStorage.getItem("pending_edit_transactions");
@@ -231,7 +231,9 @@ export default function PortalDashboard() {
     }
 
     setIsSyncing(true);
-    setSyncStatus("Syncing...");
+    if (!silent) {
+      setSyncStatus("Syncing...");
+    }
 
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -368,11 +370,17 @@ export default function PortalDashboard() {
         remainingDeletes.length;
 
       if (totalRemaining === 0) {
-        setSyncStatus("Synced");
-        setTimeout(() => setSyncStatus(null), 2500);
+        if (!silent) {
+          setSyncStatus("Synced");
+          setTimeout(() => setSyncStatus(null), 2500);
+        } else {
+          setSyncStatus(null);
+        }
       } else {
-        setSyncStatus("Sync incomplete");
-        setTimeout(() => setSyncStatus(null), 4000);
+        if (!silent) {
+          setSyncStatus("Sync incomplete");
+          setTimeout(() => setSyncStatus(null), 4000);
+        }
       }
 
       fetchData(false);
@@ -438,21 +446,25 @@ export default function PortalDashboard() {
     loadCachedData();
     fetchData(false);
 
+    const handleOnlineSync = () => {
+      syncPendingTransactions(false); // Force visible sync on connection recovery
+    };
+
     const updateTheme = () => {
       const savedAccent = localStorage.getItem("theme_accent");
       if (savedAccent) setThemeColor(savedAccent);
     };
 
     if (typeof window !== "undefined") {
-      window.addEventListener("online", syncPendingTransactions);
+      window.addEventListener("online", handleOnlineSync);
       window.addEventListener("theme-changed", updateTheme);
       
       if (navigator.onLine) {
-        syncPendingTransactions();
+        syncPendingTransactions(true); // Initial load sync is background-silent
       }
       
       return () => {
-        window.removeEventListener("online", syncPendingTransactions);
+        window.removeEventListener("online", handleOnlineSync);
         window.removeEventListener("theme-changed", updateTheme);
       };
     }
@@ -607,7 +619,7 @@ export default function PortalDashboard() {
       localStorage.setItem("pending_sync_transactions", JSON.stringify(pendingQueue));
       
       setSyncStatus("Saving...");
-      syncPendingTransactions(); // Trigger background sync immediately!
+      syncPendingTransactions(true); // Trigger background sync immediately! (silent)
     } catch (err) {
       console.error("Local caching failed", err);
     }
@@ -650,7 +662,7 @@ export default function PortalDashboard() {
       localStorage.setItem("pending_sync_categories", JSON.stringify(pendingQueue));
 
       setSyncStatus("Saving...");
-      syncPendingTransactions(); // Trigger background sync immediately!
+      syncPendingTransactions(true); // Trigger background sync immediately! (silent)
     } catch (err) {
       console.error("Local category caching failed", err);
     }
@@ -780,7 +792,7 @@ export default function PortalDashboard() {
       localStorage.setItem("pending_edit_transactions", JSON.stringify(pendingEdits));
 
       setSyncStatus("Saving...");
-      syncPendingTransactions();
+      syncPendingTransactions(true);
     } catch (err) {
       console.error(err);
     }
@@ -815,7 +827,7 @@ export default function PortalDashboard() {
       localStorage.setItem("pending_delete_transactions", JSON.stringify(pendingDeletes));
 
       setSyncStatus("Saving...");
-      syncPendingTransactions();
+      syncPendingTransactions(true);
     } catch (err) {
       console.error(err);
     }
