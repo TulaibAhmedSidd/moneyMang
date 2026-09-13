@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { connectToDatabase } from "@/lib/db";
 import User from "@/models/User";
+import Account from "@/models/Account";
 import { registerSchema } from "@/shared";
 import { sendVerificationEmail } from "@/services/email";
 import { isRateLimited } from "@/lib/rateLimit";
 
+const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret";
+
 export async function POST(request: Request) {
   try {
     const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
-    const limited = await isRateLimited(ip, "/api/v1/auth/register", 3, 60000); // 3 hits per minute max
+    const limited = await isRateLimited(ip, "/api/v1/auth/register", 15, 60000); // 15 attempts per minute max
     if (limited) {
       return NextResponse.json(
         { success: false, message: "Too many registration attempts. Please try again in 1 minute." },
@@ -25,14 +29,16 @@ export async function POST(request: Request) {
     // Validate body using Zod schema
     const parseResult = registerSchema.safeParse(body);
     if (!parseResult.success) {
+      const fieldErrors = parseResult.error.errors.map((err) => ({
+        field: err.path.join("."),
+        message: err.message,
+      }));
+      const detailedMessage = fieldErrors.map((e) => e.message).join(". ");
       return NextResponse.json(
         {
           success: false,
-          message: "Validation failed",
-          errors: parseResult.error.errors.map((err) => ({
-            field: err.path.join("."),
-            message: err.message,
-          })),
+          message: detailedMessage || "Validation failed",
+          errors: fieldErrors,
         },
         { status: 400 }
       );
@@ -46,7 +52,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Email is already registered",
+          message: "This email address is already registered. Please sign in instead.",
         },
         { status: 409 }
       );
@@ -56,49 +62,66 @@ export async function POST(request: Request) {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Create random email verification token
+    // Create random email verification token (for future verification if enabled)
     const emailVerificationToken = crypto.randomBytes(32).toString("hex");
 
-    // Create user in PENDING_VERIFICATION status
+    // Create user in ACTIVE status so they can use the app immediately
     const newUser = await User.create({
       name,
       email: email.toLowerCase(),
       passwordHash,
       authProviders: ["local"],
-      emailVerified: false,
+      emailVerified: true,
       role: "USER",
       permissions: [],
-      status: "PENDING_VERIFICATION",
-      preferredCurrency: "USD",
+      status: "ACTIVE",
+      preferredCurrency: "PKR",
       locale: "en",
-      timezone: "UTC",
+      timezone: "Asia/Karachi",
       weekStartsOn: 0,
-      onboardingCompleted: false,
+      onboardingCompleted: true,
     });
 
-    // Send verification email (non-blocking or handled async)
-    // We send it and check success, but we won't block register if SMTP is missing
-    const emailSent = await sendVerificationEmail(
-      newUser.email,
-      newUser.name,
-      emailVerificationToken
+    // Create a default "Cash" account so new user can immediately log transactions
+    await Account.create({
+      userId: newUser._id,
+      name: "Cash",
+      type: "cash",
+      currency: "PKR",
+      initialBalance: 0,
+      isActive: true,
+    });
+
+    // Generate JWT token for seamless auto-login
+    const token = jwt.sign(
+      {
+        userId: newUser._id,
+        email: newUser.email,
+        role: newUser.role,
+      },
+      JWT_SECRET,
+      { expiresIn: "30d" }
     );
+
+    // Attempt verification email if SMTP is configured
+    sendVerificationEmail(newUser.email, newUser.name, emailVerificationToken).catch(() => {});
 
     return NextResponse.json(
       {
         success: true,
         data: {
+          token,
           user: {
             id: newUser._id,
             name: newUser.name,
             email: newUser.email,
             status: newUser.status,
             role: newUser.role,
+            preferredCurrency: newUser.preferredCurrency,
+            onboardingCompleted: newUser.onboardingCompleted,
           },
         },
-        message: emailSent
-          ? "User registered successfully. Please check your email to verify your account."
-          : "User registered successfully. (Email verification pending configuration).",
+        message: "User registered successfully.",
       },
       { status: 201 }
     );

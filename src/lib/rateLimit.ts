@@ -24,6 +24,14 @@ export async function isRateLimited(
   const record = await RateLimit.findOne({ key });
 
   if (record) {
+    // Check if the rate limit window has expired
+    if (record.resetAt && Date.now() > new Date(record.resetAt).getTime()) {
+      record.hits = 1;
+      record.resetAt = new Date(Date.now() + windowMs);
+      await record.save();
+      return false;
+    }
+
     if (record.hits >= limit) {
       return true;
     }
