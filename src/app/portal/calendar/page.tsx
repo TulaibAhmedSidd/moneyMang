@@ -121,6 +121,8 @@ export default function FinancialCalendar() {
   }, [selectedDateStr, transactionsByDate]);
 
   const getCategoryIcon = (iconName: string) => {
+    if (!iconName) return "💸";
+    const raw = (iconName.includes("|") ? iconName.split("|")[0] : iconName).trim();
     const mapping: Record<string, string> = {
       restaurant: "🍔",
       fastfood: "🍕",
@@ -136,8 +138,33 @@ export default function FinancialCalendar() {
       store: "🏪",
       trending_up: "📈",
       home: "🏠",
+      "phone-android": "📱",
+      phone_android: "📱",
+      checkroom: "👗",
+      wifi: "📶",
+      "medical-services": "🏥",
+      medical_services: "🏥",
+      flight: "✈️",
+      book: "📚",
+      people: "👥",
+      chair: "🪑",
+      fitness_center: "🏋️",
+      "fitness-center": "🏋️",
+      card_giftcard: "🎁",
+      "card-giftcard": "🎁",
+      subscriptions: "💳",
+      school: "📖",
+      vpn_key: "🔑",
+      "vpn-key": "🔑",
+      water_drop: "💧",
+      "water-drop": "💧",
+      more_horiz: "⋯",
+      "more-horiz": "⋯",
+      event: "📅",
     };
-    return mapping[iconName] || "💸";
+    if (mapping[raw]) return mapping[raw];
+    if (/^[a-zA-Z0-9_-]{2,}$/.test(raw)) return "🏷️";
+    return raw || "💸";
   };
 
   if (isLoading) {

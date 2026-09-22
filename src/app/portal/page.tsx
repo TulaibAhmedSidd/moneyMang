@@ -88,6 +88,7 @@ export default function PortalDashboard() {
   const [activeType, setActiveType] = useState<"expense" | "income">("expense");
   const [timeframe, setTimeframe] = useState<Timeframe>("day");
   const [filterDate, setFilterDate] = useState<Date>(new Date());
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   // Transaction Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -479,7 +480,7 @@ export default function PortalDashboard() {
   const resolveCategory = (category: any) => {
     if (!category) return { icon: "💸", color: "#64748b" };
     
-    const iconStr = category.icon || "💸";
+    const iconStr = (category.icon || "💸").trim();
     if (iconStr.includes("|")) {
       const [icon, color] = iconStr.split("|");
       return { icon: icon || "💸", color: color || "#64748b" };
@@ -500,9 +501,41 @@ export default function PortalDashboard() {
       store: { icon: "🏪", color: "#db2777" },
       trending_up: { icon: "📈", color: "#10b981" },
       home: { icon: "🏠", color: "#4f46e5" },
+      "phone-android": { icon: "📱", color: "#3b82f6" },
+      phone_android: { icon: "📱", color: "#3b82f6" },
+      checkroom: { icon: "👗", color: "#ec4899" },
+      wifi: { icon: "📶", color: "#06b6d4" },
+      "medical-services": { icon: "🏥", color: "#ef4444" },
+      medical_services: { icon: "🏥", color: "#ef4444" },
+      flight: { icon: "✈️", color: "#06b6d4" },
+      book: { icon: "📚", color: "#8b5cf6" },
+      people: { icon: "👥", color: "#ec4899" },
+      chair: { icon: "🪑", color: "#4f46e5" },
+      fitness_center: { icon: "🏋️", color: "#10b981" },
+      "fitness-center": { icon: "🏋️", color: "#10b981" },
+      card_giftcard: { icon: "🎁", color: "#ec4899" },
+      "card-giftcard": { icon: "🎁", color: "#ec4899" },
+      subscriptions: { icon: "💳", color: "#6366f1" },
+      school: { icon: "📖", color: "#8b5cf6" },
+      vpn_key: { icon: "🔑", color: "#f59e0b" },
+      "vpn-key": { icon: "🔑", color: "#f59e0b" },
+      water_drop: { icon: "💧", color: "#0284c7" },
+      "water-drop": { icon: "💧", color: "#0284c7" },
+      more_horiz: { icon: "⋯", color: "#64748b" },
+      "more-horiz": { icon: "⋯", color: "#64748b" },
+      event: { icon: "📅", color: "#8b5cf6" },
     };
 
-    return systemMappings[iconStr] || { icon: iconStr, color: "#64748b" };
+    if (systemMappings[iconStr]) {
+      return systemMappings[iconStr];
+    }
+
+    // Safety fallback: if iconStr looks like a text name (e.g. "phone-android" or "clothing"), do not render raw text
+    if (/^[a-zA-Z0-9_-]{2,}$/.test(iconStr)) {
+      return { icon: "🏷️", color: "#64748b" };
+    }
+
+    return { icon: iconStr, color: "#64748b" };
   };
 
   // Group and calculate transaction segments
@@ -1017,47 +1050,100 @@ export default function PortalDashboard() {
           </div>
         ) : (
           <div className="space-y-2">
-            {categoryBreakdown.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => openTxModalWithCategory(item.id)}
-                className="w-full flex justify-between items-center py-3 px-4 bg-zinc-900/30 border border-zinc-900/80 rounded-2xl hover:bg-zinc-900/50 transition text-left cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-base"
-                    style={{ backgroundColor: item.color + "15", border: `1px solid ${item.color}35` }}
+            {categoryBreakdown.map((item) => {
+              const isExpanded = expandedCategory === item.id;
+              const catTransactions = activeTransactions.filter(
+                (tx) => (tx.categoryId?._id || "unassigned") === item.id
+              );
+
+              return (
+                <div key={item.id} className="rounded-2xl border border-zinc-900/80 bg-zinc-900/30 overflow-hidden transition">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedCategory(isExpanded ? null : item.id)}
+                    className="w-full flex justify-between items-center py-3 px-4 hover:bg-zinc-900/50 transition text-left cursor-pointer"
                   >
-                    <span>{item.icon}</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-white">{item.name}</p>
-                  </div>
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-base"
+                        style={{ backgroundColor: item.color + "15", border: `1px solid ${item.color}35` }}
+                      >
+                        <span>{item.icon}</span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-white">{item.name}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">
+                          {catTransactions.length} {catTransactions.length === 1 ? "log" : "logs"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 text-right">
+                      <span className="text-[10px] font-bold text-slate-500">{item.percentage}%</span>
+                      <span className="text-xs font-bold text-white">
+                        {formatMoney(item.amount, user?.preferredCurrency || "USD")}
+                      </span>
+                      <span className={`text-[10px] text-slate-400 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}>
+                        ▼
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Expanded Transactions for this Category */}
+                  {isExpanded && (
+                    <div className="border-t border-zinc-800/60 bg-black/20 p-2 space-y-1.5">
+                      {catTransactions.map((tx) => (
+                        <div
+                          key={tx._id}
+                          onClick={() => openEditModal(tx)}
+                          className="flex justify-between items-center py-2 px-3 rounded-xl bg-zinc-900/40 hover:bg-zinc-800/60 transition cursor-pointer text-xs"
+                        >
+                          <div className="flex flex-col truncate max-w-[180px]">
+                            <span className="font-semibold text-slate-200 truncate">{tx.title}</span>
+                            <span className="text-[10px] text-slate-500">
+                              {new Date(tx.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white">
+                              {formatMoney(tx.amount, tx.currency)}
+                            </span>
+                            <span className="text-[10px] text-blue-400 font-medium">Edit ✎</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                
-                <div className="flex items-center gap-4 text-right">
-                  <span className="text-[10px] font-bold text-slate-500">{item.percentage}%</span>
-                  <span className="text-xs font-bold text-white">
-                    {formatMoney(item.amount, user?.preferredCurrency || "USD")}
-                  </span>
-                </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Recent Logs List */}
+      {/* Logs List for Current Timeframe */}
       <div className="space-y-3 pt-2">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Recent Logs</h3>
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+            {timeframe === "month"
+              ? "Monthly Logs"
+              : timeframe === "week"
+              ? "Weekly Logs"
+              : timeframe === "day"
+              ? "Daily Logs"
+              : "Yearly Logs"}{" "}
+            ({activeTransactions.length})
+          </h3>
+          <span className="text-[10px] text-slate-500">Tap to edit</span>
+        </div>
+
         {activeTransactions.length === 0 ? (
           <div className="text-center py-8 border border-dashed border-zinc-900 rounded-2xl bg-zinc-900/5 text-xs text-slate-500">
             No transaction logs recorded in this period.
           </div>
         ) : (
           <div className="space-y-2">
-            {activeTransactions.slice(0, 5).map((tx) => {
+            {activeTransactions.map((tx) => {
               const cat = resolveCategory(tx.categoryId);
               const isIncome = tx.type === "income";
               return (

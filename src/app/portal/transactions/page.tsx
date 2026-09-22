@@ -198,7 +198,49 @@ export default function TransactionsHistory() {
 
   const resolveCategoryIcon = (cat: any) => {
     if (!cat || !cat.icon) return "💸";
-    return cat.icon.split("|")[0];
+    const raw = (cat.icon.split("|")[0] || "💸").trim();
+    const systemMap: Record<string, string> = {
+      restaurant: "🍔",
+      fastfood: "🍕",
+      "local-dining": "🍜",
+      "local-cafe": "☕",
+      "local-grocery-store": "🛒",
+      "directions-car": "🚗",
+      "local-gas-station": "⛽",
+      build: "🔧",
+      receipt: "📄",
+      work: "💼",
+      laptop: "💻",
+      store: "🏪",
+      trending_up: "📈",
+      home: "🏠",
+      "phone-android": "📱",
+      phone_android: "📱",
+      checkroom: "👗",
+      wifi: "📶",
+      "medical-services": "🏥",
+      medical_services: "🏥",
+      flight: "✈️",
+      book: "📚",
+      people: "👥",
+      chair: "🪑",
+      fitness_center: "🏋️",
+      "fitness-center": "🏋️",
+      card_giftcard: "🎁",
+      "card-giftcard": "🎁",
+      subscriptions: "💳",
+      school: "📖",
+      vpn_key: "🔑",
+      "vpn-key": "🔑",
+      water_drop: "💧",
+      "water-drop": "💧",
+      more_horiz: "⋯",
+      "more-horiz": "⋯",
+      event: "📅",
+    };
+    if (systemMap[raw]) return systemMap[raw];
+    if (/^[a-zA-Z0-9_-]{2,}$/.test(raw)) return "🏷️";
+    return raw;
   };
 
   const resolveCategoryColor = (cat: any) => {
