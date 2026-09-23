@@ -38,11 +38,12 @@ export async function GET(request: Request) {
       if (endDate) query.date.$lte = new Date(endDate);
     }
 
-    // Text search on title/description
-    if (search) {
+    // Text search on title/description with ReDOS injection escaping
+    if (search && search.trim()) {
+      const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
+        { title: { $regex: escapedSearch, $options: "i" } },
+        { description: { $regex: escapedSearch, $options: "i" } },
       ];
     }
 

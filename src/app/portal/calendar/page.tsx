@@ -3,38 +3,12 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { formatMoney } from "@/shared";
 
+import { usePortalData } from "@/context/PortalDataContext";
+
 export default function FinancialCalendar() {
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { transactions, user, isLoading } = usePortalData();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(new Date().getDate());
-
-  const fetchCalendarData = async () => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        setUser(JSON.parse(userStr));
-      }
-
-      // Fetch all transactions for the current year/month
-      const response = await fetch("/api/v1/transactions?limit=100", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const result = await response.json();
-      setTransactions(result.data?.transactions || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCalendarData();
-  }, []);
 
   const preferredCurrency = user?.preferredCurrency || "USD";
 

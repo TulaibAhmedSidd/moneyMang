@@ -53,20 +53,28 @@ const getISODateWithLocalTime = (ymdString: string) => {
   }
 };
 
+import { usePortalData } from "@/context/PortalDataContext";
+
 export default function PortalDashboard() {
-  const [user, setUser] = useState<any>(null);
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    user,
+    accounts,
+    categories,
+    transactions,
+    themeColor,
+    syncStatus,
+    isSyncing,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    addCategory,
+    addAccount,
+    refreshAllData,
+  } = usePortalData();
+
+  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Offline & Synchronization states
-  const [syncStatus, setSyncStatus] = useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [themeColor, setThemeColor] = useState("#3b82f6");
 
   // Edit Transaction Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -187,289 +195,11 @@ export default function PortalDashboard() {
     setFilterDate(newDate);
   };
 
-  // Load Cached Data instantly for smooth PWA usability
-  const loadCachedData = () => {
-    try {
-      const cachedAcc = localStorage.getItem("cached_accounts");
-      const cachedCat = localStorage.getItem("cached_categories");
-      const cachedTx = localStorage.getItem("cached_transactions");
-      const cachedUser = localStorage.getItem("user");
-      const savedAccent = localStorage.getItem("theme_accent");
-
-      if (savedAccent) setThemeColor(savedAccent);
-      if (cachedUser) setUser(JSON.parse(cachedUser));
-      if (cachedAcc) setAccounts(JSON.parse(cachedAcc));
-      if (cachedCat) setCategories(JSON.parse(cachedCat));
-      if (cachedTx) setTransactions(JSON.parse(cachedTx));
-      
-      if (cachedAcc || cachedTx) {
-        setIsLoading(false); // disable loader instantly
-      }
-    } catch (e) {
-      console.error("Local storage load failed", e);
-    }
-  };
-
-  // Sync Offline Queue (Categories & Transactions & Edits & Deletes) to Backend
-  const syncPendingTransactions = async (silent = false) => {
-    const pendingCatsStr = localStorage.getItem("pending_sync_categories");
-    const pendingTxsStr = localStorage.getItem("pending_sync_transactions");
-    const pendingEditsStr = localStorage.getItem("pending_edit_transactions");
-    const pendingDeletesStr = localStorage.getItem("pending_delete_transactions");
-
-    const pendingCats = pendingCatsStr ? JSON.parse(pendingCatsStr) : [];
-    const pendingTxs = pendingTxsStr ? JSON.parse(pendingTxsStr) : [];
-    const pendingEdits = pendingEditsStr ? JSON.parse(pendingEditsStr) : [];
-    const pendingDeletes = pendingDeletesStr ? JSON.parse(pendingDeletesStr) : [];
-
-    if (
-      pendingCats.length === 0 &&
-      pendingTxs.length === 0 &&
-      pendingEdits.length === 0 &&
-      pendingDeletes.length === 0
-    ) {
-      return;
-    }
-
-    setIsSyncing(true);
-    if (!silent) {
-      setSyncStatus("Syncing...");
-    }
-
-    try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const catIdMap: Record<string, string> = {};
-      const remainingCats: any[] = [];
-
-      // 1. Sync Categories
-      for (const cat of pendingCats) {
-        try {
-          const res = await fetch("/api/v1/categories", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              name: cat.name,
-              type: cat.type,
-              icon: cat.icon,
-            }),
-          });
-          const json = await res.json();
-          if (json.success && json.data?._id) {
-            catIdMap[cat.tempId] = json.data._id;
-          } else {
-            remainingCats.push(cat);
-          }
-        } catch {
-          remainingCats.push(cat);
-        }
-      }
-
-      if (remainingCats.length === 0) {
-        localStorage.removeItem("pending_sync_categories");
-      } else {
-        localStorage.setItem("pending_sync_categories", JSON.stringify(remainingCats));
-      }
-
-      // 2. Sync Inserts
-      const remainingTxs: any[] = [];
-      for (const tx of pendingTxs) {
-        let catId = tx.categoryId;
-        if (catId.startsWith("temp_cat_") && catIdMap[catId]) {
-          catId = catIdMap[catId];
-        }
-
-        try {
-          const res = await fetch("/api/v1/transactions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              ...tx,
-              categoryId: catId,
-            }),
-          });
-          const json = await res.json();
-          if (!json.success) {
-            remainingTxs.push(tx);
-          }
-        } catch {
-          remainingTxs.push(tx);
-        }
-      }
-
-      if (remainingTxs.length === 0) {
-        localStorage.removeItem("pending_sync_transactions");
-      } else {
-        localStorage.setItem("pending_sync_transactions", JSON.stringify(remainingTxs));
-      }
-
-      // 3. Sync Edits
-      const remainingEdits: any[] = [];
-      for (const edit of pendingEdits) {
-        if (edit._id.startsWith("temp_")) continue;
-
-        try {
-          const res = await fetch(`/api/v1/transactions/${edit._id}`, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(edit),
-          });
-          const json = await res.json();
-          if (!json.success) {
-            remainingEdits.push(edit);
-          }
-        } catch {
-          remainingEdits.push(edit);
-        }
-      }
-
-      if (remainingEdits.length === 0) {
-        localStorage.removeItem("pending_edit_transactions");
-      } else {
-        localStorage.setItem("pending_edit_transactions", JSON.stringify(remainingEdits));
-      }
-
-      // 4. Sync Deletes
-      const remainingDeletes: any[] = [];
-      for (const id of pendingDeletes) {
-        if (id.startsWith("temp_")) continue;
-
-        try {
-          const res = await fetch(`/api/v1/transactions/${id}`, {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          const json = await res.json();
-          if (!json.success) {
-            remainingDeletes.push(id);
-          }
-        } catch {
-          remainingDeletes.push(id);
-        }
-      }
-
-      if (remainingDeletes.length === 0) {
-        localStorage.removeItem("pending_delete_transactions");
-      } else {
-        localStorage.setItem("pending_delete_transactions", JSON.stringify(remainingDeletes));
-      }
-
-      const totalRemaining =
-        remainingCats.length +
-        remainingTxs.length +
-        remainingEdits.length +
-        remainingDeletes.length;
-
-      if (totalRemaining === 0) {
-        if (!silent) {
-          setSyncStatus("Synced");
-          setTimeout(() => setSyncStatus(null), 2500);
-        } else {
-          setSyncStatus(null);
-        }
-      } else {
-        if (!silent) {
-          setSyncStatus("Sync incomplete");
-          setTimeout(() => setSyncStatus(null), 4000);
-        }
-      }
-
-      fetchData(false);
-    } catch (e) {
-      console.error("Sync failed", e);
-      setSyncStatus("Offline");
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const fetchData = async (showLoader = false) => {
-    if (showLoader) setIsLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const headers = { Authorization: `Bearer ${token}` };
-
-      // Fetch user profile
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        setUser(JSON.parse(userStr));
-      }
-
-      // Fetch Accounts
-      const accRes = await fetch("/api/v1/accounts", { headers });
-      const accJson = await accRes.json();
-      const accountsList = accJson.data || [];
-      setAccounts(accountsList);
-      localStorage.setItem("cached_accounts", JSON.stringify(accountsList));
-
-      // Fetch Categories
-      const catRes = await fetch("/api/v1/categories", { headers });
-      const catJson = await catRes.json();
-      const categoriesList = catJson.data || [];
-      setCategories(categoriesList);
-      localStorage.setItem("cached_categories", JSON.stringify(categoriesList));
-
-      // Fetch Transactions with Date filter
-      const startStr = dateBounds.start.toISOString();
-      const endStr = dateBounds.end.toISOString();
-      const txRes = await fetch(`/api/v1/transactions?limit=100&startDate=${startStr}&endDate=${endStr}`, { headers });
-      const txJson = await txRes.json();
-      const transactionsList = txJson.data?.transactions || [];
-      setTransactions(transactionsList);
-      localStorage.setItem("cached_transactions", JSON.stringify(transactionsList));
-      
-      if (accountsList.length > 0) {
-        setTxAccount(accountsList[0]._id);
-      }
-    } catch (err: any) {
-      if (!navigator.onLine) {
-        console.log("Running offline mode.");
-      } else {
-        setError(err?.message || "Failed to load portal metrics");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadCachedData();
-    fetchData(false);
-
-    const handleOnlineSync = () => {
-      syncPendingTransactions(false); // Force visible sync on connection recovery
-    };
-
-    const updateTheme = () => {
-      const savedAccent = localStorage.getItem("theme_accent");
-      if (savedAccent) setThemeColor(savedAccent);
-    };
-
-    if (typeof window !== "undefined") {
-      window.addEventListener("online", handleOnlineSync);
-      window.addEventListener("theme-changed", updateTheme);
-      
-      if (navigator.onLine) {
-        syncPendingTransactions(true); // Initial load sync is background-silent
-      }
-      
-      return () => {
-        window.removeEventListener("online", handleOnlineSync);
-        window.removeEventListener("theme-changed", updateTheme);
-      };
+    if (accounts.length > 0 && !txAccount) {
+      setTxAccount(accounts[0]._id);
     }
-  }, [timeframe, filterDate]);
+  }, [accounts, txAccount]);
 
   // Aggregate total accounts balances
   const totalBalance = useMemo(() => {
@@ -607,55 +337,19 @@ export default function PortalDashboard() {
     const amountVal = parseFloat(txAmount);
     const minorAmount = Math.round(amountVal * 100);
 
-    const selectedCat = categories.find((c) => c._id === txCategory);
-    const selectedAcc = accounts.find((a) => a._id === txAccount);
-
-    const tempTx = {
-      _id: "temp_" + Date.now(),
+    // Call context optimistic mutation (0ms latency, local state first, silent cloud sync)
+    await addTransaction({
       amount: minorAmount,
       type: activeType,
       title: txTitle,
-      accountId: selectedAcc ? { _id: selectedAcc._id, name: selectedAcc.name } : txAccount,
-      categoryId: selectedCat ? { _id: selectedCat._id, name: selectedCat.name, icon: selectedCat.icon } : txCategory,
+      accountId: txAccount,
+      categoryId: txCategory,
       description: txDescription,
       date: getISODateWithLocalTime(txDate),
       currency: user?.preferredCurrency || "USD",
-      isPendingSync: true,
-    };
+    });
 
-    // Optimistic UI updates instantly!
-    setTransactions((prev) => [tempTx, ...prev]);
-    setAccounts((prevAccounts) =>
-      prevAccounts.map((acc) => {
-        if (acc._id === txAccount) {
-          const diff = activeType === "income" ? minorAmount : -minorAmount;
-          return { ...acc, balance: (acc.balance ?? 0) + diff };
-        }
-        return acc;
-      })
-    );
     setIsModalOpen(false);
-
-    // Save transaction to offline queue for background sync
-    try {
-      const pendingQueue = JSON.parse(localStorage.getItem("pending_sync_transactions") || "[]");
-      pendingQueue.push({
-        amount: minorAmount,
-        type: activeType,
-        title: txTitle,
-        accountId: txAccount,
-        categoryId: txCategory,
-        description: txDescription,
-        date: getISODateWithLocalTime(txDate),
-        currency: user?.preferredCurrency || "USD",
-      });
-      localStorage.setItem("pending_sync_transactions", JSON.stringify(pendingQueue));
-      
-      setSyncStatus("Saving...");
-      syncPendingTransactions(true); // Trigger background sync immediately! (silent)
-    } catch (err) {
-      console.error("Local caching failed", err);
-    }
   };
 
   const handleAddCategory = async (e: React.FormEvent) => {
@@ -665,40 +359,16 @@ export default function PortalDashboard() {
       return;
     }
 
-    const tempId = "temp_cat_" + Date.now();
     const formattedIcon = `${catSelectedEmoji}|${catSelectedColor}`;
-
-    const tempCat = {
-      _id: tempId,
+    const createdCat = await addCategory({
       name: catName.trim(),
       type: catType,
       icon: formattedIcon,
-      isSystem: false,
-      isArchived: false,
-    };
+    });
 
-    // Optimistically update categories and select it instantly!
-    setCategories((prev) => [...prev, tempCat]);
-    setTxCategory(tempId);
+    setTxCategory(createdCat._id);
     setIsCatModalOpen(false);
     setCatName("");
-
-    // Save category to offline queue for background sync
-    try {
-      const pendingQueue = JSON.parse(localStorage.getItem("pending_sync_categories") || "[]");
-      pendingQueue.push({
-        tempId,
-        name: catName.trim(),
-        type: catType,
-        icon: formattedIcon,
-      });
-      localStorage.setItem("pending_sync_categories", JSON.stringify(pendingQueue));
-
-      setSyncStatus("Saving...");
-      syncPendingTransactions(true); // Trigger background sync immediately! (silent)
-    } catch (err) {
-      console.error("Local category caching failed", err);
-    }
   };
 
   const handleAddAccount = async (e: React.FormEvent) => {
@@ -710,35 +380,19 @@ export default function PortalDashboard() {
 
     setIsSubmitLoading(true);
     try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      
       const balanceVal = parseFloat(accInitBalance);
       const minorBalance = Math.round(balanceVal * 100);
 
-      const response = await fetch("/api/v1/accounts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: accName,
-          type: accType,
-          currency: user?.preferredCurrency || "USD",
-          initialBalance: minorBalance,
-        }),
+      await addAccount({
+        name: accName,
+        type: accType,
+        currency: user?.preferredCurrency || "USD",
+        initialBalance: minorBalance,
       });
-
-      const res = await response.json();
-      if (!res.success) {
-        alert(res.message || "Failed to create account");
-        return;
-      }
 
       setIsAccModalOpen(false);
       setAccName("");
       setAccInitBalance("0");
-      fetchData();
     } catch (err: any) {
       alert(err.message || "Failed to create account");
     } finally {
@@ -768,102 +422,24 @@ export default function PortalDashboard() {
     const amountVal = parseFloat(editAmount);
     const minorAmount = Math.round(amountVal * 100);
 
-    const oldTx = transactions.find((t) => t._id === editTxId);
-    if (!oldTx) return;
-
-    const selectedCat = categories.find((c) => c._id === editCategory);
-    const selectedAcc = accounts.find((a) => a._id === editAccount);
-
-    const updatedTx = {
-      ...oldTx,
-      title: editTitle,
+    await updateTransaction(editTxId, {
       amount: minorAmount,
-      accountId: selectedAcc ? { _id: selectedAcc._id, name: selectedAcc.name } : editAccount,
-      categoryId: selectedCat ? { _id: selectedCat._id, name: selectedCat.name, icon: selectedCat.icon } : editCategory,
+      type: editType,
+      title: editTitle,
+      accountId: editAccount,
+      categoryId: editCategory,
       description: editDescription,
       date: getISODateWithLocalTime(editDate),
-      type: editType,
-    };
+    });
 
-    const oldMinor = oldTx.amount;
-    const oldType = oldTx.type;
-
-    setAccounts((prevAccounts) =>
-      prevAccounts.map((acc) => {
-        let bal = acc.balance ?? 0;
-        const oldAccId = oldTx.accountId?._id || oldTx.accountId;
-        if (acc._id === oldAccId) {
-          const oldDiff = oldType === "income" ? -oldMinor : oldMinor;
-          bal += oldDiff;
-        }
-        if (acc._id === editAccount) {
-          const newDiff = editType === "income" ? minorAmount : -minorAmount;
-          bal += newDiff;
-        }
-        return { ...acc, balance: bal };
-      })
-    );
-
-    setTransactions((prev) =>
-      prev.map((t) => (t._id === editTxId ? updatedTx : t))
-    );
     setIsEditModalOpen(false);
-
-    try {
-      const pendingEdits = JSON.parse(localStorage.getItem("pending_edit_transactions") || "[]");
-      pendingEdits.push({
-        _id: editTxId,
-        amount: minorAmount,
-        type: editType,
-        title: editTitle,
-        accountId: editAccount,
-        categoryId: editCategory,
-        description: editDescription,
-        date: getISODateWithLocalTime(editDate),
-        currency: oldTx.currency || "PKR",
-      });
-      localStorage.setItem("pending_edit_transactions", JSON.stringify(pendingEdits));
-
-      setSyncStatus("Saving...");
-      syncPendingTransactions(true);
-    } catch (err) {
-      console.error(err);
-    }
   };
 
   const handleDeleteTransaction = async () => {
     if (!confirm("Are you sure you want to delete this log?")) return;
 
-    const oldTx = transactions.find((t) => t._id === editTxId);
-    if (!oldTx) return;
-
-    const minorAmount = oldTx.amount;
-    const oldAccId = oldTx.accountId?._id || oldTx.accountId;
-    const oldType = oldTx.type;
-
-    setAccounts((prevAccounts) =>
-      prevAccounts.map((acc) => {
-        if (acc._id === oldAccId) {
-          const diff = oldType === "income" ? -minorAmount : minorAmount;
-          return { ...acc, balance: (acc.balance ?? 0) + diff };
-        }
-        return acc;
-      })
-    );
-
-    setTransactions((prev) => prev.filter((t) => t._id !== editTxId));
+    await deleteTransaction(editTxId);
     setIsEditModalOpen(false);
-
-    try {
-      const pendingDeletes = JSON.parse(localStorage.getItem("pending_delete_transactions") || "[]");
-      pendingDeletes.push(editTxId);
-      localStorage.setItem("pending_delete_transactions", JSON.stringify(pendingDeletes));
-
-      setSyncStatus("Saving...");
-      syncPendingTransactions(true);
-    } catch (err) {
-      console.error(err);
-    }
   };
 
   if (isLoading && transactions.length === 0) {

@@ -16,10 +16,13 @@ const COLORS = [
   "#84cc16", // Lime
 ];
 
+import { usePortalData } from "@/context/PortalDataContext";
+
 export default function AnalyticsDashboard() {
-  const [data, setData] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { analyticsData, fetchAnalyticsData, user: contextUser } = usePortalData();
+  const [data, setData] = useState<any>(analyticsData || null);
+  const [user, setUser] = useState<any>(contextUser || null);
+  const [isLoading, setIsLoading] = useState(!analyticsData);
   const [error, setError] = useState<string | null>(null);
 
   // Timeframe selector states
@@ -27,38 +30,30 @@ export default function AnalyticsDashboard() {
   const [endDate, setEndDate] = useState("");
 
   const fetchAnalytics = async (start = "", end = "") => {
-    setIsLoading(true);
+    if (!data) setIsLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        setUser(JSON.parse(userStr));
-      }
-
-      let url = "/api/v1/analytics/spending";
-      const params = [];
-      if (start) params.push(`startDate=${start}`);
-      if (end) params.push(`endDate=${end}`);
-      if (params.length > 0) {
-        url += `?${params.join("&")}`;
-      }
-
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const result = await response.json();
-      if (result.success) {
-        setData(result.data);
+      const res = await fetchAnalyticsData(start, end);
+      if (res) {
+        setData(res);
       } else {
-        setError(result.message || "Failed to load analytics");
+        setError("Failed to load analytics data");
       }
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred");
+      setError(err?.message || "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (analyticsData) {
+      setData(analyticsData);
+    }
+    if (contextUser) {
+      setUser(contextUser);
+    }
+  }, [analyticsData, contextUser]);
 
   useEffect(() => {
     // Default: current month bounds

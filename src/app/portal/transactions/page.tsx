@@ -3,16 +3,25 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { formatMoney } from "@/shared";
 
+import { usePortalData } from "@/context/PortalDataContext";
+
 type TimeFilter = "all" | "day" | "week" | "month" | "year";
 
 export default function TransactionsHistory() {
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    transactions,
+    accounts,
+    categories,
+    user,
+    isLoading,
+    updateTransaction,
+    deleteTransaction,
+  } = usePortalData();
+
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
   // Edit Transaction Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -25,52 +34,6 @@ export default function TransactionsHistory() {
   const [editDate, setEditDate] = useState("");
   const [editType, setEditType] = useState<"income" | "expense">("expense");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const fetchTransactions = async () => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        setUser(JSON.parse(userStr));
-      }
-
-      const response = await fetch("/api/v1/transactions?limit=100", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const result = await response.json();
-      setTransactions(result.data?.transactions || []);
-    } catch (error) {
-      console.error("Failed to load transactions", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchMetadata = async () => {
-    try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const headers = { Authorization: `Bearer ${token}` };
-
-      const [accRes, catRes] = await Promise.all([
-        fetch("/api/v1/accounts", { headers }),
-        fetch("/api/v1/categories", { headers })
-      ]);
-
-      const accJson = await accRes.json();
-      const catJson = await catRes.json();
-
-      setAccounts(accJson.data || []);
-      setCategories(catJson.data || []);
-    } catch (err) {
-      console.error("Failed to load accounts/categories metadata", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchTransactions();
-    fetchMetadata();
-  }, []);
 
   const getLocalYMD = (d: Date) => {
     const y = d.getFullYear();
@@ -100,35 +63,20 @@ export default function TransactionsHistory() {
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       const amountVal = parseFloat(editAmount);
       const minorAmount = Math.round(amountVal * 100);
 
-      const response = await fetch(`/api/v1/transactions/${editTxId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: editTitle,
-          amount: minorAmount,
-          accountId: editAccount,
-          categoryId: editCategory,
-          description: editDescription,
-          date: new Date(editDate + "T12:00:00.000Z"),
-          type: editType,
-        }),
+      await updateTransaction(editTxId, {
+        title: editTitle,
+        amount: minorAmount,
+        accountId: editAccount,
+        categoryId: editCategory,
+        description: editDescription,
+        date: new Date(editDate + "T12:00:00.000Z").toISOString(),
+        type: editType,
       });
 
-      const res = await response.json();
-      if (!res.success) {
-        alert(res.message || "Failed to update transaction");
-        return;
-      }
-
       setIsEditModalOpen(false);
-      fetchTransactions(); // Refresh the list
     } catch (err: any) {
       alert(err.message || "Failed to update transaction");
     } finally {
@@ -141,20 +89,8 @@ export default function TransactionsHistory() {
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const response = await fetch(`/api/v1/transactions/${editTxId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const res = await response.json();
-      if (!res.success) {
-        alert(res.message || "Failed to delete transaction");
-        return;
-      }
-
+      await deleteTransaction(editTxId);
       setIsEditModalOpen(false);
-      setTransactions(transactions.filter((tx) => tx._id !== editTxId));
     } catch (err: any) {
       alert(err.message || "Failed to delete transaction");
     } finally {
@@ -295,6 +231,40 @@ export default function TransactionsHistory() {
 
       {/* Logs Table / List */}
       <div className="border border-zinc-800/80 rounded-3xl bg-zinc-900/10 p-6">
+        <div className="flex justify-between items-center pb-4 mb-4 border-b border-zinc-800/60">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Showing {Math.min(filteredTransactions.length, (currentPage - 1) * pageSize + 1)} -{" "}
+            {Math.min(filteredTransactions.length, currentPage * pageSize)} of {filteredTransactions.length} logs
+          </span>
+          {filteredTransactions.length > pageSize && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="rounded-lg px-2.5 py-1 text-xs font-bold bg-zinc-850 hover:bg-zinc-800 disabled:opacity-40 text-slate-200 transition"
+              >
+                ◀ Prev
+              </button>
+              <span className="text-xs font-semibold text-slate-400">
+                Page {currentPage} of {Math.ceil(filteredTransactions.length / pageSize)}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((p) =>
+                    Math.min(Math.ceil(filteredTransactions.length / pageSize), p + 1)
+                  )
+                }
+                disabled={currentPage >= Math.ceil(filteredTransactions.length / pageSize)}
+                className="rounded-lg px-2.5 py-1 text-xs font-bold bg-zinc-850 hover:bg-zinc-800 disabled:opacity-40 text-slate-200 transition"
+              >
+                Next ▶
+              </button>
+            </div>
+          )}
+        </div>
+
         {filteredTransactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
             <span className="text-5xl text-slate-800">📭</span>
@@ -303,50 +273,53 @@ export default function TransactionsHistory() {
           </div>
         ) : (
           <div className="space-y-4 divide-y divide-zinc-800/50">
-            {filteredTransactions.map((tx, idx) => {
-              const isIncome = tx.type === "income";
-              const isFirst = idx === 0;
-              const catIcon = resolveCategoryIcon(tx.categoryId);
-              const catColor = resolveCategoryColor(tx.categoryId);
-              
-              return (
-                <div
-                  key={tx._id}
-                  onClick={() => openEditModal(tx)}
-                  className={`flex justify-between items-center hover:bg-zinc-900/25 rounded-2xl p-4 transition cursor-pointer ${
-                    isFirst ? "" : "mt-2"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-10 w-10 items-center justify-center rounded-xl text-lg transition duration-200"
-                      style={{ backgroundColor: catColor + "15", border: `1px solid ${catColor}30` }}
-                    >
-                      {catIcon}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-white">{tx.title}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5 animate-pulse-slow">
-                        {tx.categoryId?.name || "Uncategorized"} • {new Date(tx.date).toLocaleDateString(undefined, {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </p>
-                      {tx.description && (
-                        <p className="text-xs text-slate-400 italic mt-1 max-w-sm truncate">{tx.description}</p>
-                      )}
-                    </div>
-                  </div>
+            {filteredTransactions
+              .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+              .map((tx, idx) => {
+                const isIncome = tx.type === "income";
+                const isFirst = idx === 0;
+                const catIcon = resolveCategoryIcon(tx.categoryId);
+                const catColor = resolveCategoryColor(tx.categoryId);
 
-                  <div className="flex items-center gap-4">
-                    <span className={`text-sm font-bold ${isIncome ? "text-emerald-400" : "text-rose-450"}`}>
-                      {isIncome ? "+" : "-"} {formatMoney(tx.amount, tx.currency)}
-                    </span>
+                return (
+                  <div
+                    key={tx._id}
+                    onClick={() => openEditModal(tx)}
+                    className={`flex justify-between items-center hover:bg-zinc-900/25 rounded-2xl p-4 transition cursor-pointer ${
+                      isFirst ? "" : "mt-2"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex h-10 w-10 items-center justify-center rounded-xl text-lg transition duration-200"
+                        style={{ backgroundColor: catColor + "15", border: `1px solid ${catColor}30` }}
+                      >
+                        {catIcon}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-white">{tx.title}</h4>
+                        <p className="text-xs text-slate-500 mt-0.5 animate-pulse-slow">
+                          {tx.categoryId?.name || "Uncategorized"} •{" "}
+                          {new Date(tx.date).toLocaleDateString(undefined, {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </p>
+                        {tx.description && (
+                          <p className="text-xs text-slate-400 italic mt-1 max-w-sm truncate">{tx.description}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <span className={`text-sm font-bold ${isIncome ? "text-emerald-400" : "text-rose-450"}`}>
+                        {isIncome ? "+" : "-"} {formatMoney(tx.amount, tx.currency)}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         )}
       </div>
