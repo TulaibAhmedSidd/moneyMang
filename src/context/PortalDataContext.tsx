@@ -161,7 +161,7 @@ export function PortalDataProvider({ children }: { children: React.ReactNode }) 
       const [accRes, catRes, txRes] = await Promise.all([
         fetch("/api/v1/accounts", { headers }).catch(() => null),
         fetch("/api/v1/categories", { headers }).catch(() => null),
-        fetch("/api/v1/transactions?limit=100", { headers }).catch(() => null),
+        fetch("/api/v1/transactions?limit=1000", { headers }).catch(() => null),
       ]);
 
       if (accRes && accRes.ok) {

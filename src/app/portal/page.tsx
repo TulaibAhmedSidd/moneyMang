@@ -53,6 +53,60 @@ const getISODateWithLocalTime = (ymdString: string) => {
   }
 };
 
+// Helper to determine if transaction date matches active timeframe
+const isTxInPeriod = (
+  txDateRaw: string | Date,
+  timeframe: Timeframe,
+  filterDate: Date,
+  dateBounds: { start: Date; end: Date }
+) => {
+  if (!txDateRaw) return false;
+  const d = new Date(txDateRaw);
+  if (isNaN(d.getTime())) return false;
+
+  if (timeframe === "day") {
+    if (typeof txDateRaw === "string" && /^\d{4}-\d{2}-\d{2}$/.test(txDateRaw.trim())) {
+      const [y, m, day] = txDateRaw.trim().split("-").map(Number);
+      return (
+        y === filterDate.getFullYear() &&
+        m - 1 === filterDate.getMonth() &&
+        day === filterDate.getDate()
+      );
+    }
+    return (
+      d.getFullYear() === filterDate.getFullYear() &&
+      d.getMonth() === filterDate.getMonth() &&
+      d.getDate() === filterDate.getDate()
+    );
+  }
+
+  if (timeframe === "week") {
+    const txMs = d.getTime();
+    return txMs >= dateBounds.start.getTime() && txMs <= dateBounds.end.getTime();
+  }
+
+  if (timeframe === "month") {
+    if (typeof txDateRaw === "string" && /^\d{4}-\d{2}-\d{2}/.test(txDateRaw.trim())) {
+      const [y, m] = txDateRaw.trim().split("-").map(Number);
+      return y === filterDate.getFullYear() && m - 1 === filterDate.getMonth();
+    }
+    return (
+      d.getFullYear() === filterDate.getFullYear() &&
+      d.getMonth() === filterDate.getMonth()
+    );
+  }
+
+  if (timeframe === "year") {
+    if (typeof txDateRaw === "string" && /^\d{4}/.test(txDateRaw.trim())) {
+      const y = parseInt(txDateRaw.trim().slice(0, 4), 10);
+      return y === filterDate.getFullYear();
+    }
+    return d.getFullYear() === filterDate.getFullYear();
+  }
+
+  return true;
+};
+
 import { usePortalData } from "@/context/PortalDataContext";
 
 export default function PortalDashboard() {
@@ -136,7 +190,7 @@ export default function PortalDashboard() {
       const currentDay = filterDate.getDay();
       const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
       const start = new Date(y, m, filterDate.getDate() + distanceToMonday, 0, 0, 0, 0);
-      const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000 - 1);
+      const end = new Date(y, m, filterDate.getDate() + distanceToMonday + 6, 23, 59, 59, 999);
       return { start, end };
     }
     
@@ -270,8 +324,11 @@ export default function PortalDashboard() {
 
   // Group and calculate transaction segments
   const activeTransactions = useMemo(() => {
-    return transactions.filter((tx) => tx.type === activeType);
-  }, [transactions, activeType]);
+    return transactions.filter((tx) => {
+      if (tx.type !== activeType) return false;
+      return isTxInPeriod(tx.date, timeframe, filterDate, dateBounds);
+    });
+  }, [transactions, activeType, timeframe, filterDate, dateBounds]);
 
   const totalPeriodAmount = useMemo(() => {
     return activeTransactions.reduce((sum: number, tx: any) => sum + (tx.amount ?? 0), 0);
@@ -315,7 +372,7 @@ export default function PortalDashboard() {
     setTxTitle("");
     setTxAmount("");
     setTxDescription("");
-    setTxDate(getLocalYMD());
+    setTxDate(getLocalYMD(filterDate));
     if (accounts.length > 0) setTxAccount(accounts[0]._id);
     const filteredCats = categories.filter((c) => c.type === type);
     if (filteredCats.length > 0) setTxCategory(filteredCats[0]._id);

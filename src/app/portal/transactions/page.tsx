@@ -113,17 +113,25 @@ export default function TransactionsHistory() {
       const now = new Date();
       list = list.filter((tx) => {
         const date = new Date(tx.date);
-        const diffTime = Math.abs(now.getTime() - date.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (isNaN(date.getTime())) return false;
 
         if (timeFilter === "day") {
-          return diffDays <= 1;
+          return (
+            date.getFullYear() === now.getFullYear() &&
+            date.getMonth() === now.getMonth() &&
+            date.getDate() === now.getDate()
+          );
         } else if (timeFilter === "week") {
-          return diffDays <= 7;
+          const diffTime = now.getTime() - date.getTime();
+          const diffDays = diffTime / (1000 * 60 * 60 * 24);
+          return diffDays >= -1 && diffDays <= 7;
         } else if (timeFilter === "month") {
-          return diffDays <= 30;
+          return (
+            date.getFullYear() === now.getFullYear() &&
+            date.getMonth() === now.getMonth()
+          );
         } else if (timeFilter === "year") {
-          return diffDays <= 365;
+          return date.getFullYear() === now.getFullYear();
         }
         return true;
       });

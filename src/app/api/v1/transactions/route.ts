@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     const search = searchParams.get("search");
 
     // Pagination query parameters
-    const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 1000);
     const offset = Math.max(parseInt(searchParams.get("offset") || "0", 10), 0);
 
     const query: any = { userId: payload.userId };
