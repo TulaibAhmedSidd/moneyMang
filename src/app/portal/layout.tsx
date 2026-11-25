@@ -84,19 +84,19 @@ function PortalNavContent({
       </aside>
 
       {/* Mobile Header */}
-      <header className="flex md:hidden h-14 items-center justify-between border-b border-zinc-800/80 bg-zinc-900/60 backdrop-blur px-4">
-        <div className="flex items-center gap-2">
+      <header className="flex md:hidden h-16 items-center justify-between border-b border-zinc-800/80 bg-zinc-900/70 backdrop-blur-xl px-5">
+        <div className="flex items-center gap-3">
           <div 
-            className="flex h-7 w-7 items-center justify-center rounded-md font-bold text-white text-xs"
+            className="flex h-9 w-9 items-center justify-center rounded-xl font-bold text-white text-sm shadow-md"
             style={{ backgroundColor: themeColor }}
           >
             M
           </div>
-          <span className="text-sm font-bold text-white">MoneyManage</span>
+          <span className="text-base font-bold text-white tracking-tight">MoneyManage</span>
         </div>
         <button
           onClick={handleLogout}
-          className="text-slate-400 hover:text-rose-400 p-2 rounded-lg"
+          className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-rose-400 active:scale-95 rounded-xl bg-zinc-800/50 text-lg transition"
           title="Logout"
         >
           🚪
@@ -104,12 +104,12 @@ function PortalNavContent({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto pb-20 md:pb-8 p-4 md:p-8">
+      <main className="flex-1 overflow-y-auto pb-28 md:pb-8 p-4 md:p-8">
         <div className="mx-auto max-w-5xl">{children}</div>
       </main>
 
-      {/* Bottom navigation bar for Mobile PWAs */}
-      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 h-16 border-t border-zinc-800/80 bg-zinc-900/80 backdrop-blur-lg justify-around items-center z-50 px-2 pb-safe">
+      {/* Bottom navigation bar for Mobile PWAs - Large, thumb-friendly touch targets */}
+      <nav className="flex md:hidden fixed bottom-0 left-0 right-0 h-20 border-t border-zinc-800/80 bg-zinc-900/90 backdrop-blur-xl justify-around items-center z-50 px-2 pb-safe shadow-2xl">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -118,13 +118,22 @@ function PortalNavContent({
               href={item.href}
               onMouseEnter={() => prefetchTab(item.tabKey)}
               onTouchStart={() => prefetchTab(item.tabKey)}
-              className={`flex flex-col items-center justify-center flex-1 py-1 gap-1 text-[10px] font-medium transition ${
-                isActive ? "" : "text-slate-500 hover:text-slate-300"
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1.5 transition active:scale-95 ${
+                isActive ? "font-bold" : "text-slate-400 hover:text-slate-200"
               }`}
               style={isActive ? { color: themeColor } : {}}
             >
-              <span className="text-xl">{item.icon}</span>
-              <span>{item.name}</span>
+              <div 
+                className={`flex items-center justify-center rounded-2xl px-3 py-1 transition-all ${
+                  isActive ? "scale-105" : ""
+                }`}
+                style={isActive ? { backgroundColor: `${themeColor}20` } : {}}
+              >
+                <span className="text-2xl">{item.icon}</span>
+              </div>
+              <span className={`text-[11px] sm:text-xs mt-0.5 tracking-tight ${isActive ? "font-bold text-white" : "font-medium text-slate-400"}`}>
+                {item.name}
+              </span>
             </Link>
           );
         })}

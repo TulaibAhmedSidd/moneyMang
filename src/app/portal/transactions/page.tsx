@@ -209,26 +209,26 @@ export default function TransactionsHistory() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-zinc-900/30 border border-zinc-800/80 rounded-2xl p-4">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-4 shadow-sm">
         {/* Search */}
         <div className="w-full sm:max-w-xs relative">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-blue-500"
+            className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
             placeholder="Search transaction..."
           />
         </div>
 
-        {/* Filter Buttons */}
-        <div className="flex flex-wrap gap-1 bg-zinc-950 border border-zinc-850 p-1 rounded-xl w-full sm:w-auto justify-around">
+        {/* Filter Buttons - Large, comfortable touch targets */}
+        <div className="grid grid-cols-5 gap-1.5 bg-zinc-950 border border-zinc-850 p-1.5 rounded-2xl w-full sm:w-auto">
           {(["all", "day", "week", "month", "year"] as TimeFilter[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setTimeFilter(tab)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition ${
-                timeFilter === tab ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white"
+              className={`rounded-xl py-2.5 px-3 text-xs sm:text-sm font-bold uppercase tracking-wider transition active:scale-95 text-center ${
+                timeFilter === tab ? "bg-blue-600 text-white shadow-md font-extrabold" : "text-slate-400 hover:text-white"
               }`}
             >
               {tab}
@@ -238,9 +238,9 @@ export default function TransactionsHistory() {
       </div>
 
       {/* Logs Table / List */}
-      <div className="border border-zinc-800/80 rounded-3xl bg-zinc-900/10 p-6">
+      <div className="border border-zinc-800/80 rounded-3xl bg-zinc-900/10 p-4 sm:p-6 shadow-sm">
         <div className="flex justify-between items-center pb-4 mb-4 border-b border-zinc-800/60">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+          <span className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider">
             Showing {Math.min(filteredTransactions.length, (currentPage - 1) * pageSize + 1)} -{" "}
             {Math.min(filteredTransactions.length, currentPage * pageSize)} of {filteredTransactions.length} logs
           </span>
@@ -250,12 +250,12 @@ export default function TransactionsHistory() {
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="rounded-lg px-2.5 py-1 text-xs font-bold bg-zinc-850 hover:bg-zinc-800 disabled:opacity-40 text-slate-200 transition"
+                className="rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-zinc-850 hover:bg-zinc-800 active:scale-95 disabled:opacity-40 text-slate-200 transition"
               >
                 ◀ Prev
               </button>
-              <span className="text-xs font-semibold text-slate-400">
-                Page {currentPage} of {Math.ceil(filteredTransactions.length / pageSize)}
+              <span className="text-xs sm:text-sm font-semibold text-slate-400">
+                {currentPage} / {Math.ceil(filteredTransactions.length / pageSize)}
               </span>
               <button
                 type="button"
@@ -265,7 +265,7 @@ export default function TransactionsHistory() {
                   )
                 }
                 disabled={currentPage >= Math.ceil(filteredTransactions.length / pageSize)}
-                className="rounded-lg px-2.5 py-1 text-xs font-bold bg-zinc-850 hover:bg-zinc-800 disabled:opacity-40 text-slate-200 transition"
+                className="rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-zinc-850 hover:bg-zinc-800 active:scale-95 disabled:opacity-40 text-slate-200 transition"
               >
                 Next ▶
               </button>
@@ -276,16 +276,15 @@ export default function TransactionsHistory() {
         {filteredTransactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
             <span className="text-5xl text-slate-800">📭</span>
-            <h3 className="text-white font-bold">No results found</h3>
+            <h3 className="text-white font-bold text-base">No results found</h3>
             <p className="text-sm text-slate-500">Try modifying your query or filters.</p>
           </div>
         ) : (
-          <div className="space-y-4 divide-y divide-zinc-800/50">
+          <div className="space-y-3">
             {filteredTransactions
               .slice((currentPage - 1) * pageSize, currentPage * pageSize)
-              .map((tx, idx) => {
+              .map((tx) => {
                 const isIncome = tx.type === "income";
-                const isFirst = idx === 0;
                 const catIcon = resolveCategoryIcon(tx.categoryId);
                 const catColor = resolveCategoryColor(tx.categoryId);
 
@@ -293,35 +292,33 @@ export default function TransactionsHistory() {
                   <div
                     key={tx._id}
                     onClick={() => openEditModal(tx)}
-                    className={`flex justify-between items-center hover:bg-zinc-900/25 rounded-2xl p-4 transition cursor-pointer ${
-                      isFirst ? "" : "mt-2"
-                    }`}
+                    className="flex justify-between items-center hover:bg-zinc-900/40 active:scale-[0.99] border border-zinc-850/80 bg-zinc-950/30 rounded-2xl p-4 sm:p-5 transition cursor-pointer shadow-sm"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3.5">
                       <div
-                        className="flex h-10 w-10 items-center justify-center rounded-xl text-lg transition duration-200"
-                        style={{ backgroundColor: catColor + "15", border: `1px solid ${catColor}30` }}
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl transition duration-200 shadow-sm"
+                        style={{ backgroundColor: catColor + "20", border: `1.5px solid ${catColor}40` }}
                       >
                         {catIcon}
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-white">{tx.title}</h4>
-                        <p className="text-xs text-slate-500 mt-0.5 animate-pulse-slow">
+                        <h4 className="text-base font-bold text-white">{tx.title}</h4>
+                        <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
                           {tx.categoryId?.name || "Uncategorized"} •{" "}
                           {new Date(tx.date).toLocaleDateString(undefined, {
-                            month: "long",
+                            month: "short",
                             day: "numeric",
                             year: "numeric",
                           })}
                         </p>
                         {tx.description && (
-                          <p className="text-xs text-slate-400 italic mt-1 max-w-sm truncate">{tx.description}</p>
+                          <p className="text-xs text-slate-500 italic mt-1 max-w-sm truncate">{tx.description}</p>
                         )}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-4">
-                      <span className={`text-sm font-bold ${isIncome ? "text-emerald-400" : "text-rose-450"}`}>
+                      <span className={`text-base font-bold ${isIncome ? "text-emerald-400" : "text-slate-200"}`}>
                         {isIncome ? "+" : "-"} {formatMoney(tx.amount, tx.currency)}
                       </span>
                     </div>
@@ -334,22 +331,27 @@ export default function TransactionsHistory() {
 
       {/* Edit Transaction Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
           <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 px-6 py-6 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center pb-4 border-b border-zinc-800">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              <h3 className="text-base font-bold text-white uppercase tracking-wider">
                 Edit Log Detail
               </h3>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-white text-xl">✕</button>
+              <button 
+                onClick={() => setIsEditModalOpen(false)} 
+                className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-white rounded-full bg-zinc-800/60 active:scale-95 text-lg transition"
+              >
+                ✕
+              </button>
             </div>
 
             <form onSubmit={handleEditTransaction} className="mt-4 space-y-4">
-              <div className="flex bg-zinc-950 p-1 rounded-2xl border border-zinc-850">
+              <div className="flex bg-zinc-950 p-1.5 rounded-2xl border border-zinc-850">
                 <button
                   type="button"
                   onClick={() => setEditType("expense")}
-                  className={`flex-1 text-center py-2 text-xs font-bold uppercase rounded-xl transition ${
-                    editType === "expense" ? "bg-zinc-850 text-white" : "text-slate-500 hover:text-slate-300"
+                  className={`flex-1 text-center py-3 text-sm font-bold uppercase rounded-xl transition active:scale-95 ${
+                    editType === "expense" ? "bg-zinc-800 text-white shadow-md border border-zinc-700" : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
                   Expense
@@ -357,8 +359,8 @@ export default function TransactionsHistory() {
                 <button
                   type="button"
                   onClick={() => setEditType("income")}
-                  className={`flex-1 text-center py-2 text-xs font-bold uppercase rounded-xl transition ${
-                    editType === "income" ? "bg-zinc-850 text-white" : "text-slate-500 hover:text-slate-300"
+                  className={`flex-1 text-center py-3 text-sm font-bold uppercase rounded-xl transition active:scale-95 ${
+                    editType === "income" ? "bg-zinc-800 text-white shadow-md border border-zinc-700" : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
                   Income
@@ -366,49 +368,49 @@ export default function TransactionsHistory() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Title / Payee</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Title / Payee</label>
                 <input
                   type="text"
                   required
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                  className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
                   placeholder="e.g. KFC, Salary"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Amount</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Amount</label>
                   <input
                     type="number"
                     step="any"
                     required
                     value={editAmount}
                     onChange={(e) => setEditAmount(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
                     placeholder="0.00"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Date</label>
                   <input
                     type="date"
                     required
                     value={editDate}
                     onChange={(e) => setEditDate(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-3.5 text-base text-white outline-none focus:border-blue-500 transition shadow-inner"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Wallet Account</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Wallet Account</label>
                   <select
                     value={editAccount}
                     onChange={(e) => setEditAccount(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-3.5 text-base text-white outline-none focus:border-blue-500 transition shadow-inner"
                   >
                     {accounts.map((a) => (
                       <option key={a._id} value={a._id}>{a.name}</option>
@@ -416,11 +418,11 @@ export default function TransactionsHistory() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Category</label>
                   <select
                     value={editCategory}
                     onChange={(e) => setEditCategory(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-3.5 text-base text-white outline-none focus:border-blue-500 transition shadow-inner"
                   >
                     {categories.filter((c) => c.type === editType).map((c) => {
                       const iconVal = c.icon ? c.icon.split("|")[0] : "💸";
@@ -435,29 +437,29 @@ export default function TransactionsHistory() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Description</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Description (Optional)</label>
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                  className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
                   placeholder="Memo detail..."
                   rows={2}
                 />
               </div>
 
-              <div className="flex gap-3 mt-4">
+              <div className="flex gap-3.5 mt-5">
                 <button
                   type="button"
                   onClick={handleDeleteTransaction}
                   disabled={isSubmitting}
-                  className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs font-bold text-rose-400 transition hover:bg-rose-500/20 disabled:opacity-50 cursor-pointer"
+                  className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-5 py-4 text-sm sm:text-base font-bold text-rose-400 transition hover:bg-rose-500/20 active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   Delete
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 rounded-xl bg-blue-600 py-3 text-xs font-bold text-white transition hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
+                  className="flex-1 rounded-2xl bg-blue-600 py-4 text-sm sm:text-base font-bold text-white transition hover:bg-blue-500 active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-xl shadow-blue-600/30"
                 >
                   {isSubmitting ? "Saving..." : "Save Changes"}
                 </button>

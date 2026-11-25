@@ -120,21 +120,21 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* Date Filter */}
-        <form onSubmit={handleFilterSubmit} className="flex flex-wrap gap-2 items-center bg-zinc-900/30 border border-zinc-800/80 rounded-2xl p-2 w-full sm:w-auto">
+        <form onSubmit={handleFilterSubmit} className="flex flex-wrap gap-2.5 items-center bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-2.5 w-full sm:w-auto shadow-sm">
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 text-xs text-white outline-none"
+            className="flex-1 sm:flex-initial rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500 shadow-inner"
           />
-          <span className="text-slate-600 text-xs">to</span>
+          <span className="text-slate-500 text-xs font-bold uppercase">to</span>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="rounded-lg border border-zinc-800 bg-zinc-950 px-2 py-1 text-xs text-white outline-none"
+            className="flex-1 sm:flex-initial rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500 shadow-inner"
           />
-          <button type="submit" className="rounded-lg bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-500 cursor-pointer">
+          <button type="submit" className="w-full sm:w-auto rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-500 active:scale-95 transition cursor-pointer shadow-md shadow-blue-600/30">
             Filter
           </button>
         </form>

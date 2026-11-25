@@ -557,23 +557,23 @@ export default function PortalDashboard() {
       )}
 
       {/* 2. Mode Toggle (Expenses / Income) */}
-      <div className="flex bg-zinc-900/50 p-1.5 rounded-2xl border border-zinc-900">
+      <div className="flex bg-zinc-900/60 p-2 rounded-2xl border border-zinc-800/80 shadow-inner">
         <button
           onClick={() => setActiveType("expense")}
-          className={`flex-1 text-center py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition ${
+          className={`flex-1 text-center py-3.5 sm:py-3 text-sm sm:text-base font-bold uppercase tracking-wider rounded-xl transition active:scale-[0.98] ${
             activeType === "expense"
-              ? "bg-zinc-800 text-white shadow"
-              : "text-slate-500 hover:text-slate-300"
+              ? "bg-zinc-800 text-white shadow-lg shadow-black/40 border border-zinc-750"
+              : "text-slate-400 hover:text-slate-200"
           }`}
         >
           Expenses
         </button>
         <button
           onClick={() => setActiveType("income")}
-          className={`flex-1 text-center py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition ${
+          className={`flex-1 text-center py-3.5 sm:py-3 text-sm sm:text-base font-bold uppercase tracking-wider rounded-xl transition active:scale-[0.98] ${
             activeType === "income"
-              ? "bg-zinc-800 text-white shadow"
-              : "text-slate-500 hover:text-slate-300"
+              ? "bg-zinc-800 text-white shadow-lg shadow-black/40 border border-zinc-750"
+              : "text-slate-400 hover:text-slate-200"
           }`}
         >
           Income
@@ -581,15 +581,17 @@ export default function PortalDashboard() {
       </div>
 
       {/* 3. Timeframe slider filter */}
-      <div className="space-y-4">
-        {/* Day, Week, Month, Year tabs */}
-        <div className="flex bg-zinc-900/30 p-1 rounded-xl justify-around border border-zinc-900/50">
+      <div className="space-y-3.5">
+        {/* Day, Week, Month, Year tabs - Large, easy to tap buttons */}
+        <div className="grid grid-cols-4 gap-1.5 bg-zinc-900/50 p-1.5 rounded-2xl border border-zinc-850">
           {(["day", "week", "month", "year"] as Timeframe[]).map((t) => (
             <button
               key={t}
               onClick={() => setTimeframe(t)}
-              className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest transition ${
-                timeframe === t ? "text-white" : "text-slate-500 hover:text-white"
+              className={`rounded-xl py-3 text-xs sm:text-sm font-bold uppercase tracking-wider transition active:scale-95 ${
+                timeframe === t 
+                  ? "text-white shadow-md shadow-black/30 font-extrabold" 
+                  : "text-slate-400 hover:text-white hover:bg-zinc-800/40"
               }`}
               style={timeframe === t ? { backgroundColor: themeColor } : {}}
             >
@@ -598,20 +600,22 @@ export default function PortalDashboard() {
           ))}
         </div>
 
-        {/* Date Selector Row */}
-        <div className="flex justify-between items-center bg-zinc-900/20 border border-zinc-900 px-4 py-2.5 rounded-2xl">
+        {/* Date Selector Row with large, tactile touch buttons */}
+        <div className="flex justify-between items-center bg-zinc-900/40 border border-zinc-800/80 px-3 py-2.5 rounded-2xl shadow-sm">
           <button
             onClick={() => adjustDate("prev")}
-            className="text-slate-400 hover:text-white px-2 py-1 text-sm font-bold transition"
+            className="h-11 w-11 flex items-center justify-center rounded-xl bg-zinc-800/80 hover:bg-zinc-800 active:scale-95 text-slate-300 hover:text-white text-base font-bold transition shadow-sm"
+            title="Previous Period"
           >
             ◀
           </button>
-          <span className="text-xs font-bold text-white tracking-wide uppercase">
+          <span className="text-sm sm:text-base font-bold text-white tracking-wide uppercase px-2 text-center truncate">
             {dateLabel}
           </span>
           <button
             onClick={() => adjustDate("next")}
-            className="text-slate-400 hover:text-white px-2 py-1 text-sm font-bold transition"
+            className="h-11 w-11 flex items-center justify-center rounded-xl bg-zinc-800/80 hover:bg-zinc-800 active:scale-95 text-slate-300 hover:text-white text-base font-bold transition shadow-sm"
+            title="Next Period"
           >
             ▶
           </button>
@@ -656,8 +660,8 @@ export default function PortalDashboard() {
               );
             })}
           </svg>
-          <div className="absolute flex flex-col items-center justify-center text-center px-4 max-w-[100px]">
-            <span className="text-[11px] font-bold text-slate-300 tracking-tight">
+          <div className="absolute flex flex-col items-center justify-center text-center px-4 max-w-[110px]">
+            <span className="text-xs sm:text-sm font-bold text-slate-200 tracking-tight">
               {formatMoney(totalPeriodAmount, user?.preferredCurrency || "USD")}
             </span>
           </div>
@@ -665,7 +669,7 @@ export default function PortalDashboard() {
           {/* Floating yellow '+' add button at the bottom-right corner of the donut circle */}
           <button
             onClick={() => openTxModal(activeType)}
-            className="absolute bottom-1 right-1 h-12 w-12 flex items-center justify-center rounded-full bg-amber-500 text-zinc-950 font-bold hover:bg-amber-400 shadow-lg shadow-amber-500/20 text-2xl transition cursor-pointer"
+            className="absolute -bottom-1 -right-1 h-14 w-14 sm:h-16 sm:w-16 flex items-center justify-center rounded-full bg-amber-500 text-zinc-950 font-extrabold hover:bg-amber-400 active:scale-90 shadow-xl shadow-amber-500/35 text-3xl transition cursor-pointer border-2 border-zinc-900"
             title={`Add ${activeType}`}
           >
             +
@@ -675,14 +679,14 @@ export default function PortalDashboard() {
 
       {/* 5. Category list breakdown below */}
       <div className="space-y-3.5">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Breakdown share</h3>
+        <h3 className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest px-1">Breakdown share</h3>
         {categoryBreakdown.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-zinc-900 rounded-2xl bg-zinc-900/5">
             <span className="text-3xl">📝</span>
-            <p className="text-xs text-slate-500 mt-2">No {activeType} transactions recorded in this period.</p>
+            <p className="text-xs sm:text-sm text-slate-400 mt-2">No {activeType} transactions recorded in this period.</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {categoryBreakdown.map((item) => {
               const isExpanded = expandedCategory === item.id;
               const catTransactions = activeTransactions.filter(
@@ -690,33 +694,33 @@ export default function PortalDashboard() {
               );
 
               return (
-                <div key={item.id} className="rounded-2xl border border-zinc-900/80 bg-zinc-900/30 overflow-hidden transition">
+                <div key={item.id} className="rounded-2xl border border-zinc-900/80 bg-zinc-900/30 overflow-hidden transition shadow-sm">
                   <button
                     type="button"
                     onClick={() => setExpandedCategory(isExpanded ? null : item.id)}
-                    className="w-full flex justify-between items-center py-3 px-4 hover:bg-zinc-900/50 transition text-left cursor-pointer"
+                    className="w-full flex justify-between items-center py-3.5 px-4 hover:bg-zinc-900/50 active:bg-zinc-900/60 transition text-left cursor-pointer"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3.5">
                       <div
-                        className="flex h-9 w-9 items-center justify-center rounded-full text-base"
-                        style={{ backgroundColor: item.color + "15", border: `1px solid ${item.color}35` }}
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-sm"
+                        style={{ backgroundColor: item.color + "20", border: `1.5px solid ${item.color}40` }}
                       >
                         <span>{item.icon}</span>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-white">{item.name}</p>
-                        <p className="text-[10px] text-slate-500 mt-0.5">
+                        <p className="text-sm sm:text-base font-bold text-white">{item.name}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">
                           {catTransactions.length} {catTransactions.length === 1 ? "log" : "logs"}
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-3 text-right">
-                      <span className="text-[10px] font-bold text-slate-500">{item.percentage}%</span>
-                      <span className="text-xs font-bold text-white">
+                      <span className="text-xs sm:text-sm font-bold text-slate-400">{item.percentage}%</span>
+                      <span className="text-sm sm:text-base font-bold text-white">
                         {formatMoney(item.amount, user?.preferredCurrency || "USD")}
                       </span>
-                      <span className={`text-[10px] text-slate-400 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}>
+                      <span className={`text-xs text-slate-400 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}>
                         ▼
                       </span>
                     </div>
@@ -724,24 +728,24 @@ export default function PortalDashboard() {
 
                   {/* Expanded Transactions for this Category */}
                   {isExpanded && (
-                    <div className="border-t border-zinc-800/60 bg-black/20 p-2 space-y-1.5">
+                    <div className="border-t border-zinc-800/60 bg-black/30 p-2.5 space-y-2">
                       {catTransactions.map((tx) => (
                         <div
                           key={tx._id}
                           onClick={() => openEditModal(tx)}
-                          className="flex justify-between items-center py-2 px-3 rounded-xl bg-zinc-900/40 hover:bg-zinc-800/60 transition cursor-pointer text-xs"
+                          className="flex justify-between items-center py-3 px-3.5 rounded-xl bg-zinc-900/50 hover:bg-zinc-800/70 active:bg-zinc-800 transition cursor-pointer text-sm"
                         >
-                          <div className="flex flex-col truncate max-w-[180px]">
-                            <span className="font-semibold text-slate-200 truncate">{tx.title}</span>
-                            <span className="text-[10px] text-slate-500">
+                          <div className="flex flex-col truncate max-w-[200px]">
+                            <span className="font-semibold text-slate-100 truncate">{tx.title}</span>
+                            <span className="text-xs text-slate-400 mt-0.5">
                               {new Date(tx.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2.5">
                             <span className="font-bold text-white">
                               {formatMoney(tx.amount, tx.currency)}
                             </span>
-                            <span className="text-[10px] text-blue-400 font-medium">Edit ✎</span>
+                            <span className="text-xs text-blue-400 font-semibold px-2 py-0.5 rounded-lg bg-blue-500/10">Edit ✎</span>
                           </div>
                         </div>
                       ))}
@@ -755,9 +759,9 @@ export default function PortalDashboard() {
       </div>
 
       {/* Logs List for Current Timeframe */}
-      <div className="space-y-3 pt-2">
+      <div className="space-y-3.5 pt-2">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+          <h3 className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest">
             {timeframe === "month"
               ? "Monthly Logs"
               : timeframe === "week"
@@ -767,15 +771,15 @@ export default function PortalDashboard() {
               : "Yearly Logs"}{" "}
             ({activeTransactions.length})
           </h3>
-          <span className="text-[10px] text-slate-500">Tap to edit</span>
+          <span className="text-xs text-slate-500">Tap to edit</span>
         </div>
 
         {activeTransactions.length === 0 ? (
-          <div className="text-center py-8 border border-dashed border-zinc-900 rounded-2xl bg-zinc-900/5 text-xs text-slate-500">
+          <div className="text-center py-8 border border-dashed border-zinc-900 rounded-2xl bg-zinc-900/5 text-xs sm:text-sm text-slate-400">
             No transaction logs recorded in this period.
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {activeTransactions.map((tx) => {
               const cat = resolveCategory(tx.categoryId);
               const isIncome = tx.type === "income";
@@ -783,23 +787,23 @@ export default function PortalDashboard() {
                 <div
                   key={tx._id}
                   onClick={() => openEditModal(tx)}
-                  className="flex justify-between items-center py-3 px-4 bg-zinc-900/35 border border-zinc-900/60 rounded-2xl hover:bg-zinc-900/50 transition cursor-pointer"
+                  className="flex justify-between items-center py-3.5 px-4 bg-zinc-900/40 border border-zinc-850 rounded-2xl hover:bg-zinc-900/60 active:scale-[0.99] transition cursor-pointer shadow-sm"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3.5">
                     <div
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-sm"
-                      style={{ backgroundColor: cat.color + "15", border: `1px solid ${cat.color}35` }}
+                      className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-sm"
+                      style={{ backgroundColor: cat.color + "20", border: `1.5px solid ${cat.color}40` }}
                     >
                       <span>{cat.icon}</span>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white truncate max-w-[150px]">{tx.title}</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">
+                      <p className="text-sm sm:text-base font-bold text-white truncate max-w-[180px]">{tx.title}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">
                         {new Date(tx.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                       </p>
                     </div>
                   </div>
-                  <span className={`text-xs font-bold ${isIncome ? "text-emerald-400" : "text-slate-350"}`}>
+                  <span className={`text-sm sm:text-base font-bold ${isIncome ? "text-emerald-400" : "text-slate-200"}`}>
                     {isIncome ? "+" : "-"} {formatMoney(tx.amount, tx.currency)}
                   </span>
                 </div>
@@ -811,60 +815,65 @@ export default function PortalDashboard() {
 
       {/* Add Transaction Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
           <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 px-6 py-6 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center pb-4 border-b border-zinc-800">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              <h3 className="text-base font-bold text-white uppercase tracking-wider">
                 Add {activeType === "income" ? "Income" : "Expense"} Log
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white text-xl">✕</button>
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-white rounded-full bg-zinc-800/60 active:scale-95 text-lg transition"
+              >
+                ✕
+              </button>
             </div>
             
             <form onSubmit={handleAddTransaction} className="space-y-4 mt-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Title</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Title / Payee</label>
                 <input
                   type="text"
                   required
                   value={txTitle}
                   onChange={(e) => setTxTitle(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
-                  placeholder="e.g. Shopping, salary deposit"
+                  className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
+                  placeholder="e.g. Groceries, Dinner, Salary"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Amount</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Amount</label>
                   <input
                     type="number"
                     step="0.01"
                     required
                     value={txAmount}
                     onChange={(e) => setTxAmount(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
                     placeholder="0.00"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Date</label>
                   <input
                     type="date"
                     required
                     value={txDate}
                     onChange={(e) => setTxDate(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-3.5 text-base text-white outline-none focus:border-blue-500 transition shadow-inner"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Account Wallet</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Account Wallet</label>
                   <select
                     value={txAccount}
                     onChange={(e) => setTxAccount(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-3.5 text-base text-white outline-none focus:border-blue-500 transition shadow-inner"
                   >
                     {accounts.map((a) => (
                       <option key={a._id} value={a._id}>{a.name}</option>
@@ -872,7 +881,7 @@ export default function PortalDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Category</label>
                   <button
                     type="button"
                     onClick={() => {
@@ -880,29 +889,29 @@ export default function PortalDashboard() {
                       setCatSearchQuery("");
                       setIsCatPickerOpen(true);
                     }}
-                    className="mt-1 flex w-full items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none hover:border-zinc-700 transition cursor-pointer"
+                    className="flex w-full items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-3 text-sm font-semibold text-white outline-none hover:border-zinc-750 active:bg-zinc-900 transition cursor-pointer shadow-inner"
                   >
                     {(() => {
                       const currentCat = categories.find((c) => c._id === txCategory);
                       const { icon } = resolveCategory(currentCat);
                       return (
-                        <span className="flex items-center gap-2 text-left">
-                          <span className="text-sm">{icon}</span>
-                          <span className="font-semibold text-slate-200">{currentCat ? currentCat.name : "Select Category"}</span>
+                        <span className="flex items-center gap-2.5 text-left truncate">
+                          <span className="text-2xl">{icon}</span>
+                          <span className="font-bold text-slate-200 truncate">{currentCat ? currentCat.name : "Select"}</span>
                         </span>
                       );
                     })()}
-                    <span className="text-slate-500 text-[10px]">▼</span>
+                    <span className="text-slate-400 text-xs">▼</span>
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Description</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Description (Optional)</label>
                 <textarea
                   value={txDescription}
                   onChange={(e) => setTxDescription(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                  className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
                   placeholder="Memo detail..."
                   rows={2}
                 />
@@ -912,7 +921,7 @@ export default function PortalDashboard() {
                 type="submit"
                 disabled={isSubmitLoading}
                 style={{ backgroundColor: themeColor }}
-                className="w-full rounded-xl py-3 text-xs font-bold text-white transition opacity-90 hover:opacity-100 disabled:opacity-50 cursor-pointer mt-4"
+                className="w-full rounded-2xl py-4 text-base font-bold text-white transition opacity-95 hover:opacity-100 active:scale-[0.98] disabled:opacity-50 cursor-pointer mt-5 shadow-xl shadow-black/40"
               >
                 {isSubmitLoading ? "Saving Transaction..." : "Save Transaction"}
               </button>
@@ -923,63 +932,70 @@ export default function PortalDashboard() {
 
       {/* Create Category Modal */}
       {isCatModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
           <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 px-6 py-6 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center pb-4 border-b border-zinc-800">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Create New Category</h3>
-              <button onClick={() => setIsCatModalOpen(false)} className="text-slate-400 hover:text-white text-xl">✕</button>
+              <h3 className="text-base font-bold text-white uppercase tracking-wider">Create New Category</h3>
+              <button 
+                onClick={() => setIsCatModalOpen(false)} 
+                className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-white rounded-full bg-zinc-800/60 active:scale-95 text-lg transition"
+              >
+                ✕
+              </button>
             </div>
             
             <form onSubmit={handleAddCategory} className="space-y-4 mt-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Category Name</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Category Name</label>
                 <input
                   type="text"
                   required
                   value={catName}
                   onChange={(e) => setCatName(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                  className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
                   placeholder="e.g. Shopping, Utilities, Dining"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Category Type</label>
-                <div className="flex gap-4 mt-2">
-                  <label className="flex items-center gap-2 text-xs text-slate-300">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Category Type</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-300 cursor-pointer p-2 rounded-xl bg-zinc-950 border border-zinc-850 flex-1 justify-center">
                     <input
                       type="radio"
                       name="catType"
                       checked={catType === "expense"}
                       onChange={() => setCatType("expense")}
-                      className="accent-blue-500"
+                      className="accent-blue-500 h-4 w-4"
                     />
                     Expense
                   </label>
-                  <label className="flex items-center gap-2 text-xs text-slate-300">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-300 cursor-pointer p-2 rounded-xl bg-zinc-950 border border-zinc-850 flex-1 justify-center">
                     <input
                       type="radio"
                       name="catType"
                       checked={catType === "income"}
                       onChange={() => setCatType("income")}
-                      className="accent-blue-500"
+                      className="accent-blue-500 h-4 w-4"
                     />
                     Income
                   </label>
                 </div>
               </div>
 
-              {/* Grid of Emojis */}
+              {/* Grid of Emojis - Large and thumb-friendly */}
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Select Icon</label>
-                <div className="grid grid-cols-8 gap-2 bg-zinc-950 p-3 rounded-2xl max-h-36 overflow-y-auto border border-zinc-850">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select Icon</label>
+                <div className="grid grid-cols-6 sm:grid-cols-8 gap-2.5 bg-zinc-950 p-3.5 rounded-2xl max-h-44 overflow-y-auto border border-zinc-850">
                   {CATEGORY_EMOJIS.map((emoji) => (
                     <button
                       key={emoji}
                       type="button"
                       onClick={() => setCatSelectedEmoji(emoji)}
-                      className={`h-8 w-8 flex items-center justify-center rounded-lg text-lg transition ${
-                        catSelectedEmoji === emoji ? "bg-zinc-800 border border-zinc-700" : "hover:bg-zinc-900"
+                      className={`h-11 w-11 flex items-center justify-center rounded-xl text-2xl transition active:scale-95 ${
+                        catSelectedEmoji === emoji 
+                          ? "bg-zinc-800 border-2 border-blue-500 shadow-md scale-105" 
+                          : "hover:bg-zinc-900 border border-transparent"
                       }`}
                     >
                       {emoji}
@@ -990,15 +1006,15 @@ export default function PortalDashboard() {
 
               {/* Grid of Colors */}
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Select Color</label>
-                <div className="flex gap-2 flex-wrap bg-zinc-950 p-3 rounded-2xl border border-zinc-850 justify-around">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select Color</label>
+                <div className="flex gap-3 flex-wrap bg-zinc-950 p-3.5 rounded-2xl border border-zinc-850 justify-around">
                   {CATEGORY_COLORS.map((color) => (
                     <button
                       key={color}
                       type="button"
                       onClick={() => setCatSelectedColor(color)}
-                      className={`h-6 w-6 rounded-full border-2 transition ${
-                        catSelectedColor === color ? "border-white scale-110" : "border-transparent"
+                      className={`h-9 w-9 rounded-full border-2 transition active:scale-95 ${
+                        catSelectedColor === color ? "border-white scale-110 shadow-lg" : "border-transparent opacity-80 hover:opacity-100"
                       }`}
                       style={{ backgroundColor: color }}
                     />
@@ -1009,7 +1025,7 @@ export default function PortalDashboard() {
               <button
                 type="submit"
                 disabled={isSubmitLoading}
-                className="w-full rounded-xl bg-blue-600 py-3 text-xs font-bold text-white transition hover:bg-blue-500 disabled:bg-blue-800/50 cursor-pointer mt-4"
+                className="w-full rounded-2xl bg-blue-600 py-4 text-base font-bold text-white transition hover:bg-blue-500 active:scale-[0.98] disabled:bg-blue-800/50 cursor-pointer mt-5 shadow-xl shadow-blue-600/30"
               >
                 {isSubmitLoading ? "Saving Category..." : "Add Category"}
               </button>
@@ -1020,33 +1036,38 @@ export default function PortalDashboard() {
 
       {/* Account Creation Modal */}
       {isAccModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
           <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 px-6 py-6 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center pb-4 border-b border-zinc-800">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Create Wallet / Account</h3>
-              <button onClick={() => setIsAccModalOpen(false)} className="text-slate-400 hover:text-white text-xl">✕</button>
+              <h3 className="text-base font-bold text-white uppercase tracking-wider">Create Wallet / Account</h3>
+              <button 
+                onClick={() => setIsAccModalOpen(false)} 
+                className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-white rounded-full bg-zinc-800/60 active:scale-95 text-lg transition"
+              >
+                ✕
+              </button>
             </div>
             
             <form onSubmit={handleAddAccount} className="space-y-4 mt-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Account Name</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Account Name</label>
                 <input
                   type="text"
                   required
                   value={accName}
                   onChange={(e) => setAccName(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                  className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
                   placeholder="e.g. Standard Chartered, HBL, Cash"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Account Type</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Account Type</label>
                   <select
                     value={accType}
                     onChange={(e) => setAccType(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-3.5 text-base text-white outline-none focus:border-blue-500 transition shadow-inner"
                   >
                     <option value="checking">Checking</option>
                     <option value="savings">Savings</option>
@@ -1055,14 +1076,14 @@ export default function PortalDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Initial Balance</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Initial Balance</label>
                   <input
                     type="number"
                     step="0.01"
                     required
                     value={accInitBalance}
                     onChange={(e) => setAccInitBalance(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
                     placeholder="0.00"
                   />
                 </div>
@@ -1071,7 +1092,7 @@ export default function PortalDashboard() {
               <button
                 type="submit"
                 disabled={isSubmitLoading}
-                className="w-full rounded-xl bg-indigo-600 py-3 text-xs font-bold text-white transition hover:bg-indigo-500 disabled:bg-indigo-800/50 cursor-pointer mt-4"
+                className="w-full rounded-2xl bg-indigo-600 py-4 text-base font-bold text-white transition hover:bg-indigo-500 active:scale-[0.98] disabled:bg-indigo-800/50 cursor-pointer mt-5 shadow-xl shadow-indigo-600/30"
               >
                 {isSubmitLoading ? "Creating Wallet..." : "Save Account"}
               </button>
@@ -1082,22 +1103,27 @@ export default function PortalDashboard() {
 
       {/* Edit Transaction Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
           <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 px-6 py-6 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center pb-4 border-b border-zinc-800">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              <h3 className="text-base font-bold text-white uppercase tracking-wider">
                 Edit Log Detail
               </h3>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-white text-xl">✕</button>
+              <button 
+                onClick={() => setIsEditModalOpen(false)} 
+                className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-white rounded-full bg-zinc-800/60 active:scale-95 text-lg transition"
+              >
+                ✕
+              </button>
             </div>
 
             <form onSubmit={handleEditTransaction} className="mt-4 space-y-4">
-              <div className="flex bg-zinc-950 p-1 rounded-2xl border border-zinc-850">
+              <div className="flex bg-zinc-950 p-1.5 rounded-2xl border border-zinc-850">
                 <button
                   type="button"
                   onClick={() => setEditType("expense")}
-                  className={`flex-1 text-center py-2 text-xs font-bold uppercase rounded-xl transition ${
-                    editType === "expense" ? "bg-zinc-850 text-white" : "text-slate-500 hover:text-slate-300"
+                  className={`flex-1 text-center py-3 text-sm font-bold uppercase rounded-xl transition active:scale-95 ${
+                    editType === "expense" ? "bg-zinc-800 text-white shadow-md border border-zinc-700" : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
                   Expense
@@ -1105,8 +1131,8 @@ export default function PortalDashboard() {
                 <button
                   type="button"
                   onClick={() => setEditType("income")}
-                  className={`flex-1 text-center py-2 text-xs font-bold uppercase rounded-xl transition ${
-                    editType === "income" ? "bg-zinc-850 text-white" : "text-slate-500 hover:text-slate-300"
+                  className={`flex-1 text-center py-3 text-sm font-bold uppercase rounded-xl transition active:scale-95 ${
+                    editType === "income" ? "bg-zinc-800 text-white shadow-md border border-zinc-700" : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
                   Income
@@ -1114,49 +1140,49 @@ export default function PortalDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Title / Payee</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Title / Payee</label>
                 <input
                   type="text"
                   required
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                  className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
                   placeholder="e.g. KFC, Salary"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Amount</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Amount</label>
                   <input
                     type="number"
                     step="any"
                     required
                     value={editAmount}
                     onChange={(e) => setEditAmount(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
                     placeholder="0.00"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Date</label>
                   <input
                     type="date"
                     required
                     value={editDate}
                     onChange={(e) => setEditDate(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-3.5 text-base text-white outline-none focus:border-blue-500 transition shadow-inner"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Wallet Account</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Wallet Account</label>
                   <select
                     value={editAccount}
                     onChange={(e) => setEditAccount(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none focus:border-blue-500"
+                    className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-3.5 text-base text-white outline-none focus:border-blue-500 transition shadow-inner"
                   >
                     {accounts.map((a) => (
                       <option key={a._id} value={a._id}>{a.name}</option>
@@ -1164,7 +1190,7 @@ export default function PortalDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Category</label>
                   <button
                     type="button"
                     onClick={() => {
@@ -1172,46 +1198,46 @@ export default function PortalDashboard() {
                       setCatSearchQuery("");
                       setIsCatPickerOpen(true);
                     }}
-                    className="mt-1 flex w-full items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-xs text-white outline-none hover:border-zinc-700 transition cursor-pointer"
+                    className="flex w-full items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950 px-3.5 py-3 text-sm font-semibold text-white outline-none hover:border-zinc-750 active:bg-zinc-900 transition cursor-pointer shadow-inner"
                   >
                     {(() => {
                       const currentCat = categories.find((c) => c._id === editCategory);
                       const { icon } = resolveCategory(currentCat);
                       return (
-                        <span className="flex items-center gap-2 text-left">
-                          <span className="text-sm">{icon}</span>
-                          <span className="font-semibold text-slate-200">{currentCat ? currentCat.name : "Select Category"}</span>
+                        <span className="flex items-center gap-2.5 text-left truncate">
+                          <span className="text-2xl">{icon}</span>
+                          <span className="font-bold text-slate-200 truncate">{currentCat ? currentCat.name : "Select"}</span>
                         </span>
                       );
                     })()}
-                    <span className="text-slate-500 text-[10px]">▼</span>
+                    <span className="text-slate-400 text-xs">▼</span>
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Description</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Description (Optional)</label>
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-500"
+                  className="block w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 transition shadow-inner"
                   placeholder="Memo detail..."
                   rows={2}
                 />
               </div>
 
-              <div className="flex gap-3 mt-4">
+              <div className="flex gap-3.5 mt-5">
                 <button
                   type="button"
                   onClick={handleDeleteTransaction}
-                  className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs font-bold text-rose-400 transition hover:bg-rose-500/20 cursor-pointer"
+                  className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-5 py-4 text-sm sm:text-base font-bold text-rose-400 transition hover:bg-rose-500/20 active:scale-95 cursor-pointer"
                 >
                   Delete
                 </button>
                 <button
                   type="submit"
                   style={{ backgroundColor: themeColor }}
-                  className="flex-1 rounded-xl py-3 text-xs font-bold text-white transition opacity-90 hover:opacity-100 cursor-pointer"
+                  className="flex-1 rounded-2xl py-4 text-sm sm:text-base font-bold text-white transition opacity-95 hover:opacity-100 active:scale-[0.98] cursor-pointer shadow-xl shadow-black/40"
                 >
                   Save Changes
                 </button>
@@ -1221,36 +1247,36 @@ export default function PortalDashboard() {
         </div>
       )}
 
-      {/* Category Selection Modal */}
+      {/* Category Selection Modal - Large, finger-friendly picker */}
       {isCatPickerOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-3xl border border-zinc-800 bg-zinc-900 px-5 py-5 shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center pb-3 border-b border-zinc-800">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-900 px-5 py-5 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center pb-3.5 border-b border-zinc-800">
+              <h3 className="text-sm sm:text-base font-bold text-white uppercase tracking-wider">
                 Select Category
               </h3>
               <button
                 type="button"
                 onClick={() => setIsCatPickerOpen(false)}
-                className="text-slate-400 hover:text-white text-base cursor-pointer"
+                className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-white rounded-full bg-zinc-800/60 active:scale-95 text-lg transition cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             {/* Search Bar */}
-            <div className="mt-3">
+            <div className="mt-3.5">
               <input
                 type="text"
                 value={catSearchQuery}
                 onChange={(e) => setCatSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2 text-xs text-white placeholder-slate-650 outline-none focus:border-blue-550"
+                className="w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-base text-white placeholder-slate-600 outline-none focus:border-blue-500 shadow-inner"
                 placeholder="Search categories..."
               />
             </div>
 
             {/* Scrollable Categories List */}
-            <div className="mt-4 max-h-60 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+            <div className="mt-4 max-h-72 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
               {(() => {
                 const currentType = catPickerTarget === "add" ? activeType : editType;
                 const filtered = categories
@@ -1259,7 +1285,7 @@ export default function PortalDashboard() {
 
                 if (filtered.length === 0) {
                   return (
-                    <div className="text-center py-6 text-xs text-slate-500">
+                    <div className="text-center py-8 text-sm text-slate-500">
                       No categories found.
                     </div>
                   );
@@ -1281,23 +1307,23 @@ export default function PortalDashboard() {
                         }
                         setIsCatPickerOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl transition cursor-pointer text-left ${
+                      className={`w-full flex items-center justify-between p-3 rounded-2xl transition active:scale-[0.98] cursor-pointer text-left min-h-[58px] ${
                         isSelected 
-                          ? "bg-zinc-850 border border-zinc-750" 
-                          : "hover:bg-zinc-850/55 border border-transparent"
+                          ? "bg-zinc-800 border-2 border-blue-500 shadow-md" 
+                          : "hover:bg-zinc-800/60 active:bg-zinc-800/80 border border-zinc-850/80 bg-zinc-950/40"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3.5">
                         <div
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-sm"
-                          style={{ backgroundColor: color + "15", border: `1px solid ${color}30` }}
+                          className="flex h-11 w-11 items-center justify-center rounded-2xl text-2xl shadow-sm"
+                          style={{ backgroundColor: color + "20", border: `1.5px solid ${color}40` }}
                         >
                           <span>{icon}</span>
                         </div>
-                        <span className="text-xs font-bold text-white">{c.name}</span>
+                        <span className="text-sm sm:text-base font-bold text-white">{c.name}</span>
                       </div>
                       {isSelected && (
-                        <span style={{ color: themeColor }} className="text-xs font-extrabold">✓</span>
+                        <span style={{ color: themeColor }} className="text-base font-extrabold pr-1">✓</span>
                       )}
                     </button>
                   );
@@ -1306,7 +1332,7 @@ export default function PortalDashboard() {
             </div>
 
             {/* Add Category Trigger Button */}
-            <div className="mt-4 pt-3 border-t border-zinc-800">
+            <div className="mt-4 pt-3.5 border-t border-zinc-800">
               <button
                 type="button"
                 onClick={() => {
@@ -1315,9 +1341,9 @@ export default function PortalDashboard() {
                   setIsCatPickerOpen(false);
                   setIsCatModalOpen(true);
                 }}
-                className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-950 py-2.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-zinc-850 transition cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 py-3.5 text-sm font-bold text-slate-200 hover:text-white hover:bg-zinc-850 active:scale-[0.98] transition cursor-pointer shadow-sm"
               >
-                <span>➕</span>
+                <span className="text-base">➕</span>
                 <span>Create New Category</span>
               </button>
             </div>

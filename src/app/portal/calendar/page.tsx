@@ -170,16 +170,16 @@ export default function FinancialCalendar() {
             <h3 className="text-lg font-bold text-white">
               {monthNames[month]} {year}
             </h3>
-            <div className="flex gap-2">
+            <div className="flex gap-2.5">
               <button
                 onClick={prevMonth}
-                className="h-8 w-8 flex items-center justify-center rounded-lg border border-zinc-850 bg-zinc-900 text-slate-400 hover:text-white transition cursor-pointer"
+                className="h-10 w-10 flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 active:scale-95 text-slate-300 hover:text-white transition cursor-pointer shadow-sm text-sm"
               >
                 ◀
               </button>
               <button
                 onClick={nextMonth}
-                className="h-8 w-8 flex items-center justify-center rounded-lg border border-zinc-850 bg-zinc-900 text-slate-400 hover:text-white transition cursor-pointer"
+                className="h-10 w-10 flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 active:scale-95 text-slate-300 hover:text-white transition cursor-pointer shadow-sm text-sm"
               >
                 ▶
               </button>
